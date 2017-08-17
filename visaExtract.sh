@@ -144,42 +144,20 @@ do
 
 
     ########################################################################
-    ## ALIAS CHECK                                                        ##
+    ## COUTNRY/ALIAS CHECK                                                ##
     ########################################################################
 
-    # Check resulting country name exists against 'Countries' table
-    # Some countries can be referred to by more than one name (e.g - Republic of China / People's Republic of China).
-    # Others are countries in their own right but use the visa system of a larger associated state (e.g Niue -> New Zealand)
-    # In these cases, we refer to the 'CountriesAliases' table and hope there's a corresponding entry pointing us to the correct 'Countries' row id.
-
-    # Does country exist in 'Countries'?
-    TOCOUNTRY_COUNT=$(${MYSQL_CMD} -N -e "SELECT count(*) FROM Countries WHERE country=\"${TOCOUNTRY}\"")
-
-    # If it does exist, grab ID
-    if [ $TOCOUNTRY_COUNT -eq 1 ]; then
-      TOCOUNTRYID=$(${MYSQL_CMD} -N -e "SELECT id FROM Countries WHERE country=\"${TOCOUNTRY}\"")
-    fi
-
-
-    # Check against local DB pull, if it's different then update or add
-    ALIASES_CHECKFORSTRING="|${TOCOUNTRYID}|${TOCOUNTRY}"
-    echo "${ALIASES_LOCAL}" | grep -i -q "${ALIASES_CHECKFORSTRING}"
+    # Check for country against local DB pull, if it's different then update or add
+    ALLCOUNTRIES_CHECKFORSTRING="|${TOCOUNTRY}"
+    echo "${ALLCOUNTRIES_LOCAL}" | grep -i -q "${ALLCOUNTRIES_CHECKFORSTRING}"$
 
     if [ $? -ne 0 ];then
-
-      # If not, check 'CountriesAliases', if still no luck, throw error
-#      if [ $TOCOUNTRY_COUNT -eq 0 ]; then
-#        ALIAS_COUNT=$(${MYSQL_CMD} -N -e "SELECT count(*) FROM CountriesAliases WHERE alias=\"${TOCOUNTRY}\"")
-
-#        if [ $ALIAS_COUNT -eq 1 ]; then
-#          TOCOUNTRYID=$(${MYSQL_CMD} -N -e "SELECT countryId FROM CountriesAliases WHERE alias=\"${TOCOUNTRY}\"")
-#        else
-          echo -e "Problem: $TOCOUNTRY doesn't exist - ${DB_LINK}\nPlease input ${TOCOUNTRY} into the CountriesAliases table in your database.}"; exit 6;
-#        fi
-
-#      fi
-
+      echo -e "Problem: $TOCOUNTRY doesn't exist - ${DB_LINK}\nPlease input ${TOCOUNTRY} into the CountriesAliases table in your database.}"; exit 6;
+    else
+      TOCOUNTRYID=$(echo "${ALLCOUNTRIES_LOCAL}" | grep -i "|${TOCOUNTRY}"$ | cut -d '|' -f2)
     fi
+
+
 
     ########################################################################
     ## VISA TYPE CAPTURE                                                  ##
@@ -223,16 +201,14 @@ do
     # Also, a few rules are kind of one-or-the-other (e.g "Visa on arrival or E-Visa"), I err on the side of caution (eVisa)
 
     # Get rid of text that's never useful
-    VISATEXT=$(echo $VISATEXT | sed 's/ (Conditional)//gi')
-    VISATEXT=$(echo $VISATEXT | sed 's/ (temporary)//gi')
-    VISATEXT=$(echo $VISATEXT | sed 's/^Free //gi')
+    VISATEXT=$(echo $VISATEXT | sed -e 's/ (Conditional)//gi' -e 's/ (temporary)//gi' -e 's/^Free //gi')
 
     # eVisa Section
-    if [[ $VISATEXT = "EVisa"* ]]; then       VISATEXT="eVisa";       fi
-    if [[ $VISATEXT = "Electronic"* ]]; then  VISATEXT="eVisa";       fi
-    if [[ $VISATEXT = "E-"* ]]; then  VISATEXT="eVisa";       fi
-    if [[ $VISATEXT = "e-"* ]]; then  VISATEXT="eVisa";       fi
-    if [[ $VISATEXT = *"e600"* ]]; then  VISATEXT="eVisa";       fi
+    if [[ $VISATEXT = "EVisa"* ]]; then       VISATEXT="eVisa";
+    elif [[ $VISATEXT = "Electronic"* ]]; then  VISATEXT="eVisa";
+    elif [[ $VISATEXT = "E-"* ]]; then  VISATEXT="eVisa";
+    elif [[ $VISATEXT = "e-"* ]]; then  VISATEXT="eVisa";
+    elif [[ $VISATEXT = *"e600"* ]]; then  VISATEXT="eVisa";       fi
     VISATEXT=$(echo $VISATEXT |  sed -e 's/ASAN Electronic Visa/eVisa/gi' -e 's/On-line registration or eVisa/eVisa/gi' -e 's/eVisa required/eVisa/gi' -e 's/eVisitor/eVisa/gi' -e 's/^eTA$/eVisa/gi' -e 's/Online registration or eVisa/eVisa/gi' -e 's/Visa On Arrival in advance/eVisa/gi' -e 's/Visa on arrival or E-Visa/eVisa/gi' -e 's/Reciprocity fee in advance/eVisa/gi' -e 's/eVisa &amp; Visa on Arrival/eVisa/gi')
 
     # Visa Section
@@ -240,23 +216,23 @@ do
     VISATEXT=$(echo $VISATEXT | sed -e 's/Entry Permit/Visa/gi' -e 's/Entry Clearance/Visa/gi' -e 's/Visitor&#39;s Permit/Visa/gi' -e 's/^Permit/Visa/gi' -e 's/Tourist Card/Visa/gi' -e 's/Travel Certificate/Visa/gi')
 
     # Visa Not Reqired
-    if [[ $VISATEXT = *"reciprocity fee"* ]]; then	VISATEXT="Visa Not Required";   fi
-    if [[ $VISATEXT = *"Visa On Arr"* ]]; then	VISATEXT="Visa Not Required"; 	fi
-    if [[ $VISATEXT = *"Visa on arr"* ]]; then	VISATEXT="Visa Not Required"; 	fi
-    if [[ $VISATEXT = *"visa on arr"* ]]; then	VISATEXT="Visa Not Required"; 	fi
-    if [[ $VISATEXT = "Visa not req"* ]]; then	VISATEXT="Visa Not Required"; 	fi
+    if [[ $VISATEXT = *"reciprocity fee"* ]]; then      VISATEXT="Visa Not Required";
+    elif [[ $VISATEXT = *"Visa On Arr"* ]]; then        VISATEXT="Visa Not Required";
+    elif [[ $VISATEXT = *"Visa on arr"* ]]; then        VISATEXT="Visa Not Required";
+    elif [[ $VISATEXT = *"visa on arr"* ]]; then        VISATEXT="Visa Not Required";
+    elif [[ $VISATEXT = "Visa not req"* ]]; then        VISATEXT="Visa Not Required";   fi
     VISATEXT=$(echo $VISATEXT | sed -e 's/Visa Waiver Program/Visa Not Required/gi' -e 's/Freedom of movement/Visa Not Required/gi' -e 's/Multiple-entry visa on arrival/Visa Not Required/gi' -e 's/Visa is granted on arrival/Visa Not Required/gi' -e 's/Visa arrival/Visa Not Required/gi' -e 's/Visa not$/Visa Not Required/gi')
 
     # Visa Required
-    if [[ $VISATEXT = "Visa req"* ]]; then	VISATEXT="Visa Required"; fi # People actually misspell the word "required"...
+    if [[ $VISATEXT = "Visa req"* ]]; then      VISATEXT="Visa Required"; fi # People actually misspell the word "required"...
     VISATEXT=$(echo $VISATEXT | sed -e 's/Visa or eTA required/Visa Required/gi' -e 's/Special provisions/Visa Required/gi' -e 's/Admission partially refused \/ partially allowed/Visa Required/gi' -e 's/Affidavit of Identity required/Visa Required/gi' -e 's/Visa is required/Visa Required/gi' -e 's/Visa on arrival but prior approval required/Visa Required/gi' -e 's/Visa de facto required/Visa Required/gi' -e 's/Special authorization required/Visa Required/gi' -e 's/Disputed/Visa Required/gi')
 
     # Entry Not Permitted
-    if [[ $VISATEXT = "Entry Not Permitted "* ]]; then	VISATEXT="Entry Not Permitted";	fi
+    if [[ $VISATEXT = "Entry Not Permitted "* ]]; then  VISATEXT="Entry Not Permitted"; fi
     VISATEXT=$(echo $VISATEXT | sed -e 's/Admission refused/Entry Not Permitted/gi' -e 's/Invalid passport/Entry Not Permitted/gi' -e 's/Not recognized/Entry Not Permitted/gi' -e 's/Travel Banned/Entry Not Permitted/gi')
 
     # Random - This is where entries are just completely off and you have to add a manual exception
-    if [[ $VISATEXT = "With "* ]]; then	VISATEXT="Visa Required"; 	fi
+    if [[ $VISATEXT = "With "* ]]; then VISATEXT="Visa Required";       fi
 
 
 
