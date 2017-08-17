@@ -94,7 +94,7 @@ fi
 # We take a local copy of whatever currently exists in the database.
 # This means we don't have to check every curl'd record against the live DB, only update or insert if it doesn't already exist on the local.
 #
-DB_LOCAL=$(${MYSQL_CMD} -N -e "SELECT countryFromId, countryToId, VisaInfo, additionalInfo FROM VisaInfo;" | sed 's/\t/|/g')
+DB_LOCAL=$(${MYSQL_CMD} -N -e "SELECT countryFromId, countryToId, VisaInfo, additionalInfo FROM VisaInfo;" | sed 's/\t/,/g')
 
 
 
@@ -259,8 +259,8 @@ do
     echo "$DB_COUNTRY ($DB_ID) to $TOCOUNTRY ($TOCOUNTRYID) - $VISATEXT - $INFO"
 
     # Check against local DB pull, if it's different then update or add
-    CHECKFORSTRING="${DB_ID}|${TOCOUNTRYID}|${VISATEXT}|${INFO}"
-    echo "${DB_LOCAL}" | grep -q "${CHECKFORSTRING}"
+    CHECKFORSTRING="${DB_ID},${TOCOUNTRYID},${VISATEXT},${INFO}"
+    echo "${DB_LOCAL}" | grep -i -q "${CHECKFORSTRING}"
 
     if [ $? -ne 0 ];then
 
