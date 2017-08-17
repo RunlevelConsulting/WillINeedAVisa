@@ -131,10 +131,11 @@ do
     # 1. rev - Reverse the entire thing = gnp.gvs.lizarB_fo_galF-xp22/gvs.lizarB_fo_galF/50/0/bmuht/ne/aidepikiw/gro.aidemikiw.daolpu//
     # 2. cut - Extract everything before the first slash = gnp.gvs.lizarB_fo_galF-xp22
     # 3. rev - Unreverse it = 22px-Flag_of_Brazil.svg.png
-    # 4. grep - Extract everything between the words 'Flag_of_' and '.svg' = Brazil
-    # 5. sed - Remove underscores (for names with multiple words) and remove the word 'the' from any names beginning with 'the' (e.g The Bahamas)
+    # 4. sed - Get rid of a few common suffixes
+    # 5. grep - Extract everything between the words 'Flag_of_' and '.svg' = Brazil
+    # 6. sed - Remove underscores (for names with multiple words) and remove the word 'the' from any names beginning with 'the' (e.g The Bahamas)
     #
-    TOCOUNTRY=$(echo "$GRABCOUNTRY" | rev | cut -d '/' -f1 | rev | grep -o -P '(?<=Flag_of_).*(?=.svg)' | sed -e 's/_/ /g' -e 's/^the //g');
+    TOCOUNTRY=$(echo "$GRABCOUNTRY" | rev | cut -d '/' -f1 | rev | sed -e 's/_%28civil%29//g' -e  's/_%28state%29//g' | grep -o -P '(?<=Flag_of_).*(?=.svg)' | sed -e 's/_/ /g' -e 's/^the //g');
 
 
 

@@ -251,7 +251,7 @@ CREATE TABLE IF NOT EXISTS `CountriesAliases` (
   `countryId` int(12) NOT NULL,
   `alias` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci AUTO_INCREMENT=12 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci AUTO_INCREMENT=9 ;
 
 --
 -- Dumping data for table `CountriesAliases`
@@ -264,11 +264,8 @@ INSERT INTO `CountriesAliases` (`id`, `countryId`, `alias`) VALUES
 (4, 46, 'C%C3%B4te d%27Ivoire'),
 (5, 42, 'The Gambia'),
 (6, 201, 'Federated States of Micronesia'),
-(7, 151, 'Belgium %28civil%29'),
-(8, 74, 'Costa Rica %28state%29'),
-(9, 92, 'Peru %28state%29'),
-(10, 102, 'Republic of China'),
-(11, 203, 'Niue');
+(7, 102, 'Republic of China'),
+(8, 203, 'Niue');
 
 -- --------------------------------------------------------
 
