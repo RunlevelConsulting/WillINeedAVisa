@@ -166,7 +166,7 @@ do
       if [ $ALIAS_COUNT -eq 1 ]; then
         TOCOUNTRYID=$(${MYSQL_CMD} -N -e "SELECT countryId FROM CountriesAliases WHERE alias=\"${TOCOUNTRY}\"")
       else
-        echo -e "Problem: $TOCOUNTRY doesn't exist - $link\n"
+        echo -e "Problem: $TOCOUNTRY doesn't exist - ${DB_LINK}\nPlease input ${TOCOUNTRY} into the CountriesAliases table in your database.}"; exit 6;
       fi
 
     fi
