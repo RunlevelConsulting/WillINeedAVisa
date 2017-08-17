@@ -260,7 +260,7 @@ do
       fi
 
     else
-      VISAINFO_LOCAL=$(echo "$VISAINFO_LOCAL" | grep -v -i "${VISAINFO_CHECKFORSTRING}"); # Help to speed up the script by removing lines as you go
+      VISAINFO_LOCAL=$(echo "$VISAINFO_LOCAL" | sed "/${VISAINFO_CHECKFORSTRING}/d"); # Help to speed up the script by removing lines as you go
     fi
 
 
