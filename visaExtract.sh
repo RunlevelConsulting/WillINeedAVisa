@@ -195,6 +195,7 @@ do
 
     # Get rid of text that's never useful
     VISATEXT=$(echo $VISATEXT | sed 's/ (Conditional)//gi')
+    VISATEXT=$(echo $VISATEXT | sed 's/ (temporary)//gi')
     VISATEXT=$(echo $VISATEXT | sed 's/^Free //gi')
 
     # eVisa Section
@@ -202,23 +203,27 @@ do
     if [[ $VISATEXT = "Electronic"* ]]; then  VISATEXT="eVisa";       fi
     if [[ $VISATEXT = "E-"* ]]; then  VISATEXT="eVisa";       fi
     if [[ $VISATEXT = "e-"* ]]; then  VISATEXT="eVisa";       fi
-    VISATEXT=$(echo $VISATEXT |  sed -e 's/eVisa required/eVisa/gi' -e 's/eVisitor/eVisa/gi' -e 's/Online Visitor e600 visa/eVisa/gi' -e 's/^eTA$/eVisa/gi' -e 's/Online registration or eVisa/eVisa/gi' -e 's/Visa On Arrival in advance/eVisa/gi' -e 's/Visa on arrival or E-Visa/eVisa/gi' -e 's/Reciprocity fee in advance/eVisa/gi' -e 's/eVisa &amp; Visa on Arrival/eVisa/gi')
+    if [[ $VISATEXT = *"e600"* ]]; then  VISATEXT="eVisa";       fi
+    VISATEXT=$(echo $VISATEXT |  sed -e 's/ASAN Electronic Visa/eVisa/gi' -e 's/On-line registration or eVisa/eVisa/gi' -e 's/eVisa required/eVisa/gi' -e 's/eVisitor/eVisa/gi' -e 's/^eTA$/eVisa/gi' -e 's/Online registration or eVisa/eVisa/gi' -e 's/Visa On Arrival in advance/eVisa/gi' -e 's/Visa on arrival or E-Visa/eVisa/gi' -e 's/Reciprocity fee in advance/eVisa/gi' -e 's/eVisa &amp; Visa on Arrival/eVisa/gi')
 
     # Visa Section
     # Lots of different phrases refer to the same thing. Change them all to 'Visa'
     VISATEXT=$(echo $VISATEXT | sed -e 's/Entry Permit/Visa/gi' -e 's/Entry Clearance/Visa/gi' -e 's/Visitor&#39;s Permit/Visa/gi' -e 's/^Permit/Visa/gi' -e 's/Tourist Card/Visa/gi' -e 's/Travel Certificate/Visa/gi')
 
     # Visa Not Reqired
-    if [[ $VISATEXT = *"reprocity fee"* ]]; then	VISATEXT="Visa Not Required";   fi
-    if [[ $VISATEXT = *"Visa On Arrival"* ]]; then	VISATEXT="Visa Not Required"; 	fi
-    if [[ $VISATEXT = *"Visa on arrival"* ]]; then	VISATEXT="Visa Not Required"; 	fi
-    if [[ $VISATEXT = *"visa on arrival"* ]]; then	VISATEXT="Visa Not Required"; 	fi
+    if [[ $VISATEXT = *"reciprocity fee"* ]]; then	VISATEXT="Visa Not Required";   fi
+    if [[ $VISATEXT = *"Visa On Arr"* ]]; then	VISATEXT="Visa Not Required"; 	fi
+    if [[ $VISATEXT = *"Visa on arr"* ]]; then	VISATEXT="Visa Not Required"; 	fi
+    if [[ $VISATEXT = *"visa on arr"* ]]; then	VISATEXT="Visa Not Required"; 	fi
+    if [[ $VISATEXT = "Visa not req"* ]]; then	VISATEXT="Visa Not Required"; 	fi
     VISATEXT=$(echo $VISATEXT | sed -e 's/Visa Waiver Program/Visa Not Required/gi' -e 's/Freedom of movement/Visa Not Required/gi' -e 's/Multiple-entry visa on arrival/Visa Not Required/gi' -e 's/Visa is granted on arrival/Visa Not Required/gi' -e 's/Visa arrival/Visa Not Required/gi' -e 's/Visa not$/Visa Not Required/gi')
 
     # Visa Required
-    VISATEXT=$(echo $VISATEXT | sed -e 's/Special provisions/Visa Required/gi' -e 's/Admission partially refused \/ partially allowed/Visa Required/gi' -e 's/Affidavit of Identity required/Visa Required/gi' -e 's/Visa is required/Visa Required/gi' -e 's/Visa on arrival but prior approval required/Visa Required/gi' -e 's/Visa de facto required/Visa Required/gi' -e 's/Special authorization required/Visa Required/gi' -e 's/Disputed/Visa Required/gi')
+    if [[ $VISATEXT = "Visa req"* ]]; then	VISATEXT="Visa Required"; fi # People actually misspell the word "required"...
+    VISATEXT=$(echo $VISATEXT | sed -e 's/Visa or eTA required/Visa Required/gi' -e 's/Special provisions/Visa Required/gi' -e 's/Admission partially refused \/ partially allowed/Visa Required/gi' -e 's/Affidavit of Identity required/Visa Required/gi' -e 's/Visa is required/Visa Required/gi' -e 's/Visa on arrival but prior approval required/Visa Required/gi' -e 's/Visa de facto required/Visa Required/gi' -e 's/Special authorization required/Visa Required/gi' -e 's/Disputed/Visa Required/gi')
 
     # Entry Not Permitted
+    if [[ $VISATEXT = "Entry Not Permitted "* ]]; then	VISATEXT="Entry Not Permitted";	fi
     VISATEXT=$(echo $VISATEXT | sed -e 's/Admission refused/Entry Not Permitted/gi' -e 's/Invalid passport/Entry Not Permitted/gi' -e 's/Not recognized/Entry Not Permitted/gi' -e 's/Travel Banned/Entry Not Permitted/gi')
 
     # Random - This is where entries are just completely off and you have to add a manual exception
@@ -258,7 +263,7 @@ if [ "${COUNT_INCONSISTENCIES}" -gt 0 ]; then
   INCONSISTENCIES=$(${MYSQL_CMD} -N -e "SELECT DISTINCT visaInfo FROM VisaInfo WHERE visaInfo != 'Visa required' AND visaInfo != 'Visa Not Required' AND visaInfo != 'eVisa' AND visaInfo != 'Entry Not Permitted'")
 
   DATE_FORMAT=$(date +%Y-%m-%d-%H-%M-%S)
-  echo -e "Visa Script Ran At: ${DATE} \nInconsistencies were found, the VisaInfo column should consist only of the following entries: 'Visa Required', 'Visa Not Reqired', 'eVisa' and 'Entry Not Permitted'. \n Below is a list of inconsistencies found on the latest Wikipedia scan. \n ${INCONSISTENCIES} \n \n Please add the exceptions above into the 'VISA TYPE FILTERING' section of the scan script." >> /tmp/visaScan-${DATE_FORMAT}
-  echo -e "\nTThere were inconsistencies! Please review the contents of /tmp/visaScan-${DATE_FORMAT}\n"
+  echo -e "Visa Script Ran At: ${DATE} \nInconsistencies were found, the VisaInfo column should consist only of the following entries: 'Visa Required', 'Visa Not Reqired', 'eVisa' and 'Entry Not Permitted'.\n\nBelow is a list of inconsistencies found on the latest Wikipedia scan.\n${INCONSISTENCIES}\n\nPlease add the exceptions above into the 'VISA TYPE FILTERING' section of the scan script." >> /tmp/visaScan-${DATE_FORMAT}
+  echo -e "\nThere were inconsistencies! Please review the contents of /tmp/visaScan-${DATE_FORMAT}\n"
 
 fi
