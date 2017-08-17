@@ -119,9 +119,6 @@ do
     if [[ ${TOCOUNTRY} == '' ]]; then	GRABCOUNTRY=$(echo "$i" | jq -r '.children[0].children[1].children[0].children[1].src'); TOCOUNTRY=$(eval echo "$GRABCOUNTRY" ${COUNTRYFILTER}); fi
     if [[ ${TOCOUNTRY} == '' ]]; then	GRABCOUNTRY=$(echo "$i" | jq -r '.children[0].children[0].children[0].children[1].src'); TOCOUNTRY=$(eval echo "$GRABCOUNTRY" ${COUNTRYFILTER}); fi
 
-    # Validation
-    TOCOUNTRY=$(echo "$TOCOUNTRY" | tr -d -c '[:alnum:],\- ')
-
 
 
     ########################################################################
