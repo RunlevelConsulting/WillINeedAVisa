@@ -162,24 +162,24 @@ do
 
 
     # Check against local DB pull, if it's different then update or add
-#    ALIASES_CHECKFORSTRING="${TOCOUNTRYID}|${TOCOUNTRY}"
-#    echo "${ALIASES_LOCAL}" | grep -i -q "${ALIASES_CHECKFORSTRING}"
+    ALIASES_CHECKFORSTRING="|${TOCOUNTRYID}|${TOCOUNTRY}"
+    echo "${ALIASES_LOCAL}" | grep -i -q "${ALIASES_CHECKFORSTRING}"
 
-#    if [ $? -ne 0 ];then
+    if [ $? -ne 0 ];then
 
       # If not, check 'CountriesAliases', if still no luck, throw error
-      if [ $TOCOUNTRY_COUNT -eq 0 ]; then
-        ALIAS_COUNT=$(${MYSQL_CMD} -N -e "SELECT count(*) FROM CountriesAliases WHERE alias=\"${TOCOUNTRY}\"")
+#      if [ $TOCOUNTRY_COUNT -eq 0 ]; then
+#        ALIAS_COUNT=$(${MYSQL_CMD} -N -e "SELECT count(*) FROM CountriesAliases WHERE alias=\"${TOCOUNTRY}\"")
 
-        if [ $ALIAS_COUNT -eq 1 ]; then
-          TOCOUNTRYID=$(${MYSQL_CMD} -N -e "SELECT countryId FROM CountriesAliases WHERE alias=\"${TOCOUNTRY}\"")
-        else
+#        if [ $ALIAS_COUNT -eq 1 ]; then
+#          TOCOUNTRYID=$(${MYSQL_CMD} -N -e "SELECT countryId FROM CountriesAliases WHERE alias=\"${TOCOUNTRY}\"")
+#        else
           echo -e "Problem: $TOCOUNTRY doesn't exist - ${DB_LINK}\nPlease input ${TOCOUNTRY} into the CountriesAliases table in your database.}"; exit 6;
-        fi
+#        fi
 
       fi
 
-#    fi
+    fi
 
     ########################################################################
     ## VISA TYPE CAPTURE                                                  ##
