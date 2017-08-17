@@ -45,7 +45,7 @@ if (is_numeric($_GET['fromId']) && is_numeric($_GET['toId'])){
 
     }
 
-    if (strtolower($visaInfo) == "entry not permitted"){
+    if (strtolower($visaInfo) == "admission refused"){
       $bigMessage="Entry is not permitted";
       $smallMessage="Citizens of this country will be refused entry. Sorry :(";
       $oneWord=":(";
