@@ -88,13 +88,14 @@ fi
 
 
 #############################################
-## GET LOCAL COPY OF DB                    ##
+## GET LOCAL COPY OF DB TABLES             ##
 #############################################
 
 # We take a local copy of whatever currently exists in the database.
 # This means we don't have to check every curl'd record against the live DB, only update or insert if it doesn't already exist on the local.
 #
-DB_LOCAL=$(${MYSQL_CMD} -N -e "SELECT countryFromId, countryToId, VisaInfo, additionalInfo FROM VisaInfo;" | sed 's/\t/,/g')
+VISAINFO_LOCAL=$(${MYSQL_CMD} -N -e "SELECT countryFromId, countryToId, VisaInfo, additionalInfo FROM VisaInfo;" | sed -e 's/^/,/g' -e 's/\t/,/g')
+ALIASES_LOCAL=$(${MYSQL_CMD} -N -e "SELECT countryId, alias FROM CountriesAliases;" | sed -e 's/^/|/g' -e 's/\t/|/g')
 
 
 
@@ -159,19 +160,26 @@ do
       TOCOUNTRYID=$(${MYSQL_CMD} -N -e "SELECT id FROM Countries WHERE country=\"${TOCOUNTRY}\"")
     fi
 
-    # If not, check 'CountriesAliases', if still no luck, throw error
-    if [ $TOCOUNTRY_COUNT -eq 0 ]; then
-      ALIAS_COUNT=$(${MYSQL_CMD} -N -e "SELECT count(*) FROM CountriesAliases WHERE alias=\"${TOCOUNTRY}\"")
 
-      if [ $ALIAS_COUNT -eq 1 ]; then
-        TOCOUNTRYID=$(${MYSQL_CMD} -N -e "SELECT countryId FROM CountriesAliases WHERE alias=\"${TOCOUNTRY}\"")
-      else
-        echo -e "Problem: $TOCOUNTRY doesn't exist - ${DB_LINK}\nPlease input ${TOCOUNTRY} into the CountriesAliases table in your database.}"; exit 6;
+    # Check against local DB pull, if it's different then update or add
+#    ALIASES_CHECKFORSTRING="${TOCOUNTRYID}|${TOCOUNTRY}"
+#    echo "${ALIASES_LOCAL}" | grep -i -q "${ALIASES_CHECKFORSTRING}"
+
+#    if [ $? -ne 0 ];then
+
+      # If not, check 'CountriesAliases', if still no luck, throw error
+      if [ $TOCOUNTRY_COUNT -eq 0 ]; then
+        ALIAS_COUNT=$(${MYSQL_CMD} -N -e "SELECT count(*) FROM CountriesAliases WHERE alias=\"${TOCOUNTRY}\"")
+
+        if [ $ALIAS_COUNT -eq 1 ]; then
+          TOCOUNTRYID=$(${MYSQL_CMD} -N -e "SELECT countryId FROM CountriesAliases WHERE alias=\"${TOCOUNTRY}\"")
+        else
+          echo -e "Problem: $TOCOUNTRY doesn't exist - ${DB_LINK}\nPlease input ${TOCOUNTRY} into the CountriesAliases table in your database.}"; exit 6;
+        fi
+
       fi
 
-    fi
-
-
+#    fi
 
     ########################################################################
     ## VISA TYPE CAPTURE                                                  ##
@@ -259,8 +267,8 @@ do
     echo "$DB_COUNTRY ($DB_ID) to $TOCOUNTRY ($TOCOUNTRYID) - $VISATEXT - $INFO"
 
     # Check against local DB pull, if it's different then update or add
-    CHECKFORSTRING="${DB_ID},${TOCOUNTRYID},${VISATEXT},${INFO}"
-    echo "${DB_LOCAL}" | grep -i -q "${CHECKFORSTRING}"
+    VISAINFO_CHECKFORSTRING=",${DB_ID},${TOCOUNTRYID},${VISATEXT},${INFO}"
+    echo "${VISAINFO_LOCAL}" | grep -i -q "${VISAINFO_CHECKFORSTRING}"
 
     if [ $? -ne 0 ];then
 
