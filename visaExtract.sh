@@ -95,7 +95,11 @@ fi
 # This means we don't have to check every curl'd record against the live DB, only update or insert if it doesn't already exist on the local.
 #
 VISAINFO_LOCAL=$(${MYSQL_CMD} -N -e "SELECT countryFromId, countryToId, VisaInfo, additionalInfo FROM VisaInfo;" | sed -e 's/^/,/g' -e 's/\t/,/g')
+
+COUNTRIES_LOCAL=$(${MYSQL_CMD} -N -e "SELECT id, country FROM Countries;" | sed -e 's/^/|/g' -e 's/\t/|/g')
 ALIASES_LOCAL=$(${MYSQL_CMD} -N -e "SELECT countryId, alias FROM CountriesAliases;" | sed -e 's/^/|/g' -e 's/\t/|/g')
+ALLCOUNTRIES_LOCAL=$(echo -e "${COUNTRIES_LOCAL}\n${ALIASES_LOCAL}")
+
 
 
 
