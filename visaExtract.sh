@@ -22,7 +22,6 @@ DB_PASSWORD=''
 DB_HOSTNAME=''
 DB_DATABASE=''
 
-
 # MySQL Command
 MYSQL_CMD="mysql -u ${DB_USERNAME} -p${DB_PASSWORD} -h ${DB_HOSTNAME} ${DB_DATABASE}"
 
@@ -74,6 +73,28 @@ COUNT_COUNTRIESALIASES=$(${MYSQL_CMD} -N -e "SELECT count(*) FROM CountriesAlias
 if [[ "${COUNT_COUNTRIES}" -eq 0 || "${COUNT_COUNTRIESALIASES}" -eq 0 ]];  then
   ${MYSQL_CMD} < $( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )/visaExtractDB.sql
 fi
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#############################################
+## GET LOCAL COPY OF DB                    ##
+#############################################
+
+# We take a local copy of whatever currently exists in the database.
+# This means we don't have to check every curl'd record against the live DB, only update or insert if it doesn't already exist on the local.
+#
+DB_LOCAL=$(${MYSQL_CMD} -N -e "SELECT countryFromId, countryToId, VisaInfo, additionalInfo FROM VisaInfo;" | sed 's/\t/|/g')
 
 
 
@@ -232,16 +253,24 @@ do
 
 
     #############################################
-    ## Add TO DB	                       ##
+    ## VALIDATE AND ADD TO DB                  ##
     #############################################
 
     echo "$DB_COUNTRY ($DB_ID) to $TOCOUNTRY ($TOCOUNTRYID) - $VISATEXT - $INFO"
 
-    DOESITEXIST=$(${MYSQL_CMD} -N -e "SELECT count(*) FROM VisaInfo WHERE countryFromId=\"${DB_ID}\" AND countryToId=\"${TOCOUNTRYID}\"")
-    if [ $DOESITEXIST -eq 0 ]; then
-      ${MYSQL_CMD} -N -e "INSERT INTO VisaInfo (countryFromId, countryToId, visaInfo, additionalInfo) VALUES ('${DB_ID}', '${TOCOUNTRYID}', '${VISATEXT}', '${INFO}')"
-    else
-      ${MYSQL_CMD} -N -e "UPDATE VisaInfo SET visaInfo='${VISATEXT}', additionalInfo='${INFO}' WHERE countryFromId='${DB_ID}' AND countryToId='${TOCOUNTRYID}'"
+    # Check against local DB pull, if it's different then update or add
+    CHECKFORSTRING="${DB_ID}|${TOCOUNTRYID}|${VISATEXT}|${INFO}"
+    echo "${DB_LOCAL}" | grep -q "${CHECKFORSTRING}"
+
+    if [ $? -ne 0 ];then
+
+      DOESITEXIST=$(${MYSQL_CMD} -N -e "SELECT count(*) FROM VisaInfo WHERE countryFromId=\"${DB_ID}\" AND countryToId=\"${TOCOUNTRYID}\"")
+      if [ $DOESITEXIST -eq 0 ]; then
+        ${MYSQL_CMD} -N -e "INSERT INTO VisaInfo (countryFromId, countryToId, visaInfo, additionalInfo) VALUES ('${DB_ID}', '${TOCOUNTRYID}', '${VISATEXT}', '${INFO}')"
+      else
+        ${MYSQL_CMD} -N -e "UPDATE VisaInfo SET visaInfo='${VISATEXT}', additionalInfo='${INFO}' WHERE countryFromId='${DB_ID}' AND countryToId='${TOCOUNTRYID}'"
+      fi
+
     fi
 
 
