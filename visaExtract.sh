@@ -82,7 +82,7 @@ fi
 if [[ "${1}" == "RANDOM" ]]; then
   ORDER_BY="ORDER BY RAND() LIMIT 1"
 elif [[ "${1}" == "NOCACHE" ]]; then
-  rm /tmp/visaScan-Country-* > /dev/null 2>&1
+  rm -f /tmp/visaScan-Country-* > /dev/null 2>&1
   ORDER_BY="ORDER BY country ASC"
 elif [[ ${1} =~ ^-?[0-9]+$ ]]; then
   ADD_WHERE="WHERE id=${1}"
@@ -135,7 +135,7 @@ do
 
   # Stop script if this pull is identical to previous
   if [[ "${CHECK_CACHE_FILE}" == "${FILTER}" ]]; then
-    echo "Skipping ${DB_COUNTRY} (${DB_ID}): Cached file matches latest pull - therefore there are no updates."
+    echo -e "Skipping ${DB_COUNTRY} (${DB_ID}): Cached file matches latest pull - therefore there are no updates.\n"
   else
 
     # If cached data differs from latest pull, update the cache file
