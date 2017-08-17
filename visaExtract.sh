@@ -259,6 +259,8 @@ do
         ${MYSQL_CMD} -N -e "UPDATE VisaInfo SET visaInfo='${VISATEXT}', additionalInfo='${INFO}' WHERE countryFromId='${DB_ID}' AND countryToId='${TOCOUNTRYID}'"
       fi
 
+    else
+      VISAINFO_LOCAL=$(echo "$VISAINFO_LOCAL" | grep -v -i "${VISAINFO_CHECKFORSTRING}"); # Help to speed up the script by removing lines as you go
     fi
 
 
