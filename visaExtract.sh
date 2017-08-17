@@ -81,6 +81,9 @@ fi
 # If first argument is a number, then only run script against that country ID
 if [[ "${1}" == "RANDOM" ]]; then
   ORDER_BY="ORDER BY RAND() LIMIT 1"
+if [[ "${1}" == "NOCACHE" ]]; then
+  rm /tmp/visaScan-Country-* > /dev/null 2>&1
+  ORDER_BY="ORDER BY country ASC"
 elif [[ ${1} =~ ^-?[0-9]+$ ]]; then
   ADD_WHERE="WHERE id=${1}"
   rm /tmp/visaScan-Country-${1}.json > /dev/null 2>&1
