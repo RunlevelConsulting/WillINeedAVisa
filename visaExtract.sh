@@ -81,7 +81,7 @@ fi
 # If first argument is a number, then only run script against that country ID
 if [[ "${1}" == "RANDOM" ]]; then
   ORDER_BY="ORDER BY RAND() LIMIT 1"
-if [[ "${1}" == "NOCACHE" ]]; then
+elif [[ "${1}" == "NOCACHE" ]]; then
   rm /tmp/visaScan-Country-* > /dev/null 2>&1
   ORDER_BY="ORDER BY country ASC"
 elif [[ ${1} =~ ^-?[0-9]+$ ]]; then
