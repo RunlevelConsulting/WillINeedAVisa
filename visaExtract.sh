@@ -177,7 +177,7 @@ do
           echo -e "Problem: $TOCOUNTRY doesn't exist - ${DB_LINK}\nPlease input ${TOCOUNTRY} into the CountriesAliases table in your database.}"; exit 6;
 #        fi
 
-      fi
+#      fi
 
     fi
 
