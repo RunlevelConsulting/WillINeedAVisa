@@ -22,6 +22,7 @@ DB_PASSWORD=''
 DB_HOSTNAME=''
 DB_DATABASE=''
 
+
 # MySQL Command
 MYSQL_CMD="mysql -u ${DB_USERNAME} -p${DB_PASSWORD} -h ${DB_HOSTNAME} ${DB_DATABASE}"
 
@@ -67,11 +68,24 @@ if ! ${MYSQL_CMD} -e "USE ${DB_DATABASE}"; then
 
 fi
 
+
 # If DB does exist, ensure initial data exists
 COUNT_COUNTRIES=$(${MYSQL_CMD} -N -e "SELECT count(*) FROM Countries")
 COUNT_COUNTRIESALIASES=$(${MYSQL_CMD} -N -e "SELECT count(*) FROM CountriesAliases")
 if [[ "${COUNT_COUNTRIES}" -eq 0 || "${COUNT_COUNTRIESALIASES}" -eq 0 ]];  then
   ${MYSQL_CMD} < $( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )/visaExtractDB.sql
+fi
+
+
+# If first argument of script is 'RANDOM' then only scan a single country, otherwise do all
+# If first argument is a number, then only run script against that country ID
+if [[ "${1}" == "RANDOM" ]]; then
+  ORDER_BY="ORDER BY RAND() LIMIT 1"
+elif [[ ${1} =~ ^-?[0-9]+$ ]]; then
+  ADD_WHERE="WHERE id=${1}"
+  rm /tmp/visaScan-Country-${1}.json > /dev/null 2>&1
+else
+  ORDER_BY="ORDER BY country ASC"
 fi
 
 
@@ -94,13 +108,17 @@ ALLCOUNTRIES_LOCAL=$(echo -e "${COUNTRIES_LOCAL}\n${ALIASES_LOCAL}")
 #############################################
 
 # For each entry in the 'Countries' table...
-${MYSQL_CMD} -BNr -e "SELECT * FROM Countries $ADD ORDER BY country ASC;" | while IFS=$'\t' read DB_ID DB_COUNTRY DB_LINK;
+${MYSQL_CMD} -BNr -e "SELECT * FROM Countries ${ADD_WHERE} ${ORDER_BY};" | while IFS=$'\t' read DB_ID DB_COUNTRY DB_LINK;
 do
 
   # Get all visa info for this particular country and store to a local variable
   # Breaking this down into an array by country instead of a monolithic variable with all countries totalling tens of thousands of lines speeds up the script considerably
   #
   VISAINFO_LOCAL[${DB_ID}]=$(${MYSQL_CMD} -N -e "SELECT countryFromId, countryToId, VisaInfo, additionalInfo FROM VisaInfo WHERE countryFromId=${DB_ID};" | sed -e 's/\t/,/g')
+
+  # This file acts as a cache, if the data in this file is the same as the data pulled from the curl below, then we know nothing has changed and this country can be skipped
+  COUNTRY_CACHE_FILE="/tmp/visaScan-Country-${DB_ID}.json"; touch "${COUNTRY_CACHE_FILE}";
+  CHECK_CACHE_FILE=$(cat ${COUNTRY_CACHE_FILE})
 
   # Grab Wikipedia page and make it vaguely iterable
   #
@@ -112,157 +130,170 @@ do
   #
   FILTER=$(curl -s --compressed "${DB_LINK}"  | pup -i 0 '.sortable' | pup json{} | sed 's/data-src/src/g' | jq -c '.[0].children[0].children[1].children[0].children[0].children[]' | tail -n +2)
 
+  # Stop script if this pull is identical to previous
+  if [[ "${CHECK_CACHE_FILE}" == "${FILTER}" ]]; then
+    echo "Skipping ${DB_COUNTRY} (${DB_ID}): Cached file matches latest pull - therefore there are no updates."
+  else
 
-  while read i; do
-
-    ########################################################################
-    ## COUNTRY CAPTURE                                                    ##
-    ########################################################################
-
-    # Due to small differences in the layout of Wikipedia tables we have to try a few times to get the right field
-    #
-    GRABCOUNTRY=$(echo "$i" | jq -r '.children[0].children[0].children[1].src');
-    if [[ ${GRABCOUNTRY} == 'null' ]]; then	GRABCOUNTRY=$(echo "$i" | jq -r '.children[0].children[1].children[0].children[1].src'); fi
-    if [[ ${GRABCOUNTRY} == 'null' ]]; then	GRABCOUNTRY=$(echo "$i" | jq -r '.children[0].children[0].children[0].children[1].src'); fi
-
-    # Got to pipe this output, example output: //upload.wikimedia.org/wikipedia/en/thumb/0/05/Flag_of_Brazil.svg/22px-Flag_of_Brazil.svg.png
-    # We need to extract the country name, this is awfully hacky but it does work
-    #
-    # 1. rev - Reverse the entire thing = gnp.gvs.lizarB_fo_galF-xp22/gvs.lizarB_fo_galF/50/0/bmuht/ne/aidepikiw/gro.aidemikiw.daolpu//
-    # 2. cut - Extract everything before the first slash = gnp.gvs.lizarB_fo_galF-xp22
-    # 3. rev - Unreverse it = 22px-Flag_of_Brazil.svg.png
-    # 4. sed - Get rid of a few common suffixes
-    # 5. grep - Extract everything between the words 'Flag_of_' and '.svg' = Brazil
-    # 6. sed - Remove underscores (for names with multiple words) and remove the word 'the' from any names beginning with 'the' (e.g The Bahamas)
-    #
-    TOCOUNTRY=$(echo "$GRABCOUNTRY" | rev | cut -d '/' -f1 | rev | sed -e 's/_%28civil%29//g' -e  's/_%28state%29//g' | grep -o -P '(?<=Flag_of_).*(?=.svg)' | sed -e 's/_/ /g' -e 's/^the //g');
+    # If cached data differs from latest pull, update the cache file
+    echo "${FILTER}" > ${COUNTRY_CACHE_FILE};
 
 
+    while read i; do
 
-    ########################################################################
-    ## COUTNRY/ALIAS CHECK                                                ##
-    ########################################################################
+      ########################################################################
+      ## COUNTRY CAPTURE                                                    ##
+      ########################################################################
 
-    # Check for country against local DB pull, if it's different then update or add
-    ALLCOUNTRIES_CHECKFORSTRING="|${TOCOUNTRY}"
-    echo "${ALLCOUNTRIES_LOCAL}" | grep -i -q "${ALLCOUNTRIES_CHECKFORSTRING}"$
+      # Due to small differences in the layout of Wikipedia tables we have to try a few times to get the right field
+      #
+      GRABCOUNTRY=$(echo "$i" | jq -r '.children[0].children[0].children[1].src');
+      if [[ ${GRABCOUNTRY} == 'null' ]]; then	GRABCOUNTRY=$(echo "$i" | jq -r '.children[0].children[1].children[0].children[1].src'); fi
+      if [[ ${GRABCOUNTRY} == 'null' ]]; then	GRABCOUNTRY=$(echo "$i" | jq -r '.children[0].children[0].children[0].children[1].src'); fi
 
-    if [ $? -ne 0 ];then
-      echo -e "Problem: $TOCOUNTRY doesn't exist - ${DB_LINK}\nPlease input ${TOCOUNTRY} into the CountriesAliases table in your database.}"; exit 6;
-    else
-      TOCOUNTRYID=$(echo "${ALLCOUNTRIES_LOCAL}" | grep -i "|${TOCOUNTRY}"$ | cut -d '|' -f2)
-    fi
+      # Got to pipe this output, example output: //upload.wikimedia.org/wikipedia/en/thumb/0/05/Flag_of_Brazil.svg/22px-Flag_of_Brazil.svg.png
+      # We need to extract the country name, this is awfully hacky but it does work
+      #
+      # 1. rev - Reverse the entire thing = gnp.gvs.lizarB_fo_galF-xp22/gvs.lizarB_fo_galF/50/0/bmuht/ne/aidepikiw/gro.aidemikiw.daolpu//
+      # 2. cut - Extract everything before the first slash = gnp.gvs.lizarB_fo_galF-xp22
+      # 3. rev - Unreverse it = 22px-Flag_of_Brazil.svg.png
+      # 4. sed - Get rid of a few common suffixes
+      # 5. grep - Extract everything between the words 'Flag_of_' and '.svg' = Brazil
+      # 6. sed - Remove underscores (for names with multiple words) and remove the word 'the' from any names beginning with 'the' (e.g The Bahamas)
+      #
+      TOCOUNTRY=$(echo "$GRABCOUNTRY" | rev | cut -d '/' -f1 | rev | sed -e 's/_%28civil%29//g' -e  's/_%28state%29//g' | grep -o -P '(?<=Flag_of_).*(?=.svg)' | sed -e 's/_/ /g' -e 's/^the //g');
 
 
 
-    ########################################################################
-    ## VISA TYPE CAPTURE                                                  ##
-    ########################################################################
+      ########################################################################
+      ## COUTNRY/ALIAS CHECK                                                ##
+      ########################################################################
 
-    # Grab visa type (Visa Required, eVisa, etc), again variations in HTML mean it sometimes takes a few attempts
-    # Sometimes there's a bit of malformed HTML so quickly remove that with sed
-    # This section of the code is pretty horrible and the less said about it, the better.
-    #
-    VISATEXT=$(echo $i | jq -r '.children[1].text' | sed 's/&lt;$//gi') # Catches 99% of entries
-    if [[ "$VISATEXT" == null || "$VISATEXT" == '' ]];  then		VISATEXT=$(echo $i | jq -r '.children[1].children[0].text' | sed 's/&lt;$//gi');   		fi # Some outputs will have an '!', these are display:none elements, we don't want these
-    if [[ "$VISATEXT" == *"!"* || "$VISATEXT" == '' ]]; then		VISATEXT=$(echo $i | jq -r '.children[1].children[1].text' | sed 's/&lt;$//gi');   		fi # So change the extracted text
-    if [[ "$VISATEXT" == null || "$VISATEXT" == '' ]]; then		VISATEXT=$(echo $i | jq -r '.children[1].children[1].children[0].text' | sed 's/&lt;$//gi');   	fi # Still doesn't get anything?
-    if [[ "$VISATEXT" == '' ]]; then					VISATEXT=$(echo $i | jq -r '.children[1].children[1].text' | sed 's/&lt;$//gi');   		fi # This catches the last of them
+      # Check for country against local DB pull, if it's different then update or add
+      ALLCOUNTRIES_CHECKFORSTRING="|${TOCOUNTRY}"
+      echo "${ALLCOUNTRIES_LOCAL}" | grep -i -q "${ALLCOUNTRIES_CHECKFORSTRING}"$
 
-    # Validation
-    VISATEXT=$(echo "$VISATEXT" | sed 's/"/\&#34;/g' | tr -d -c '[:alnum:]:/\-?.=£*()[]#+&;_!@%\\ ')
-
-
-
-    # I found that modifying the visa text can make the script a little slow.
-    # So if an entry already has one of the four valid "VisaText" values, then the next section can be skipped altogether
-    shopt -s nocasematch
-    if [[ "${VISATEXT}" != "Visa Required" && "${VISATEXT}" != "Visa Not Required" && "${VISATEXT}" != "eVisa" && "${VISATEXT}" != "Admission Refused" ]]; then
-      shopt -u nocasematch
-
-      #############################################
-      ## VISA TYPE FILTERING                     ##
-      #############################################
-
-      # Sadly because we're dealing with user-created content, it tends to be full of inconsistencies
-      # This is the part of the code you might need to add to every now and then, don't blame me for how hideous this looks
-      # Also, a few rules are kind of one-or-the-other (e.g "Visa on arrival or E-Visa"), I err on the side of caution (eVisa)
-
-      # Get rid of text that's never useful
-      VISATEXT=$(echo $VISATEXT | sed -e 's/ (Conditional)//gi' -e 's/ (temporary)//gi' -e 's/^Free //gi')
-
-      # eVisa Section
-      if [[ $VISATEXT = "EVisa"* ]]; then       VISATEXT="eVisa";
-      elif [[ $VISATEXT = "Electronic"* ]]; then  VISATEXT="eVisa";
-      elif [[ $VISATEXT = "E-"* ]]; then  VISATEXT="eVisa";
-      elif [[ $VISATEXT = "e-"* ]]; then  VISATEXT="eVisa";
-      elif [[ $VISATEXT = *"e600"* ]]; then  VISATEXT="eVisa";       fi
-      VISATEXT=$(echo $VISATEXT |  sed -e 's/ASAN Electronic Visa/eVisa/gi' -e 's/On-line registration or eVisa/eVisa/gi' -e 's/eVisa required/eVisa/gi' -e 's/eVisitor/eVisa/gi' -e 's/^eTA$/eVisa/gi' -e 's/Online registration or eVisa/eVisa/gi' -e 's/Visa On Arrival in advance/eVisa/gi' -e 's/Visa on arrival or E-Visa/eVisa/gi' -e 's/Reciprocity fee in advance/eVisa/gi' -e 's/eVisa &amp; Visa on Arrival/eVisa/gi')
-
-      # Visa Section
-      # Lots of different phrases refer to the same thing. Change them all to 'Visa'
-      VISATEXT=$(echo $VISATEXT | sed -e 's/Entry Permit/Visa/gi' -e 's/Entry Clearance/Visa/gi' -e 's/Visitor&#39;s Permit/Visa/gi' -e 's/^Permit/Visa/gi' -e 's/Tourist Card/Visa/gi' -e 's/Travel Certificate/Visa/gi')
-
-      # Visa Not Reqired
-      if [[ $VISATEXT = *"reciprocity fee"* ]]; then      VISATEXT="Visa Not Required";
-      elif [[ $VISATEXT = *"Visa On Arr"* ]]; then        VISATEXT="Visa Not Required";
-      elif [[ $VISATEXT = *"Visa on arr"* ]]; then        VISATEXT="Visa Not Required";
-      elif [[ $VISATEXT = *"visa on arr"* ]]; then        VISATEXT="Visa Not Required";
-      elif [[ $VISATEXT = "Visa not req"* ]]; then        VISATEXT="Visa Not Required";   fi
-      VISATEXT=$(echo $VISATEXT | sed -e 's/Visa Waiver Program/Visa Not Required/gi' -e 's/Freedom of movement/Visa Not Required/gi' -e 's/Multiple-entry visa on arrival/Visa Not Required/gi' -e 's/Visa is granted on arrival/Visa Not Required/gi' -e 's/Visa arrival/Visa Not Required/gi' -e 's/Visa not$/Visa Not Required/gi')
-
-      # Visa Required
-      if [[ $VISATEXT = "Visa req"* ]]; then      VISATEXT="Visa Required"; fi # People actually misspell the word "required"...
-      VISATEXT=$(echo $VISATEXT | sed -e 's/Visa or eTA required/Visa Required/gi' -e 's/Special provisions/Visa Required/gi' -e 's/Admission partially refused \/ partially allowed/Visa Required/gi' -e 's/Affidavit of Identity required/Visa Required/gi' -e 's/Visa is required/Visa Required/gi' -e 's/Visa on arrival but prior approval required/Visa Required/gi' -e 's/Visa de facto required/Visa Required/gi' -e 's/Special authorization required/Visa Required/gi' -e 's/Disputed/Visa Required/gi')
-
-      # Admission Refused
-      if [[ $VISATEXT = "Entry Not Permitted"* ]]; then  VISATEXT="Admission Refused"; fi
-      VISATEXT=$(echo $VISATEXT | sed -e 's/Invalid passport/Admission Refused/gi' -e 's/Not recognized/Admission Refused/gi' -e 's/Travel Banned/Admission Refused/gi')
-
-      # Random - This is where entries are just completely off and you have to add a manual exception
-      if [[ $VISATEXT = "With "* ]]; then VISATEXT="Visa Required";       fi
-
-    fi
-
-
-    #############################################
-    ## VISA INFO CAPTURE                       ##
-    #############################################
-
-    # Grabs info on the length of stay.
-    # egrep - Grab any number if it's followed by the word Day(s) or Month(s)
-    #
-    INFO=$(echo $i | jq -r '.children[2].text' | egrep -i -o '^[0-9]\w (Day(s|)|Month(s|))$')
-
-    # Validation
-    INFO=$(echo "$INFO" | sed 's/"/\&#34;/g' | tr -d -c '[:alnum:]:/\-?.=£*()[]#+&;_!@%\\ ')
-
-
-    #############################################
-    ## VALIDATE AND ADD TO DB                  ##
-    #############################################
-
-    echo "$DB_COUNTRY ($DB_ID) to $TOCOUNTRY ($TOCOUNTRYID) - $VISATEXT - $INFO"
-
-    # Check against local DB pull, if it's different then update or add
-    VISAINFO_CHECKFORSTRING="${DB_ID},${TOCOUNTRYID},${VISATEXT},${INFO}"
-    echo "${VISAINFO_LOCAL[${DB_ID}]}" | grep -i -q "${VISAINFO_CHECKFORSTRING}"
-
-    if [ $? -ne 0 ];then
-
-      DOESITEXIST=$(${MYSQL_CMD} -N -e "SELECT count(*) FROM VisaInfo WHERE countryFromId=\"${DB_ID}\" AND countryToId=\"${TOCOUNTRYID}\"")
-      if [ $DOESITEXIST -eq 0 ]; then
-        ${MYSQL_CMD} -N -e "INSERT INTO VisaInfo (countryFromId, countryToId, visaInfo, additionalInfo) VALUES ('${DB_ID}', '${TOCOUNTRYID}', '${VISATEXT}', '${INFO}')"
+      if [ $? -ne 0 ];then
+        echo -e "Problem: $TOCOUNTRY doesn't exist - ${DB_LINK}\nPlease input ${TOCOUNTRY} into the CountriesAliases table in your database.}"; exit 6;
       else
-        ${MYSQL_CMD} -N -e "UPDATE VisaInfo SET visaInfo='${VISATEXT}', additionalInfo='${INFO}' WHERE countryFromId='${DB_ID}' AND countryToId='${TOCOUNTRYID}'"
+        TOCOUNTRYID=$(echo "${ALLCOUNTRIES_LOCAL}" | grep -i "|${TOCOUNTRY}"$ | cut -d '|' -f2)
       fi
 
-    fi
 
-  done < <(echo "${FILTER}")
+
+      ########################################################################
+      ## VISA TYPE CAPTURE                                                  ##
+      ########################################################################
+
+      # Grab visa type (Visa Required, eVisa, etc), again variations in HTML mean it sometimes takes a few attempts
+      # Sometimes there's a bit of malformed HTML so quickly remove that with sed
+      # This section of the code is pretty horrible and the less said about it, the better.
+      #
+      VISATEXT=$(echo $i | jq -r '.children[1].text' | sed 's/&lt;$//gi') # Catches 99% of entries
+      if [[ "$VISATEXT" == null || "$VISATEXT" == '' ]];  then		VISATEXT=$(echo $i | jq -r '.children[1].children[0].text' | sed 's/&lt;$//gi');   		fi # Some outputs will have an '!', these are display:none elements, we don't want these
+      if [[ "$VISATEXT" == *"!"* || "$VISATEXT" == '' ]]; then		VISATEXT=$(echo $i | jq -r '.children[1].children[1].text' | sed 's/&lt;$//gi');   		fi # So change the extracted text
+      if [[ "$VISATEXT" == null || "$VISATEXT" == '' ]]; then		VISATEXT=$(echo $i | jq -r '.children[1].children[1].children[0].text' | sed 's/&lt;$//gi');   	fi # Still doesn't get anything?
+      if [[ "$VISATEXT" == '' ]]; then					VISATEXT=$(echo $i | jq -r '.children[1].children[1].text' | sed 's/&lt;$//gi');   		fi # This catches the last of them
+
+      # Validation
+      VISATEXT=$(echo "$VISATEXT" | sed 's/"/\&#34;/g' | tr -d -c '[:alnum:]:/\-?.=£*()[]#+&;_!@%\\ ')
+
+
+
+      # I found that modifying the visa text can make the script a little slow.
+      # So if an entry already has one of the four valid "VisaText" values, then the next section can be skipped altogether
+      shopt -s nocasematch
+      if [[ "${VISATEXT}" != "Visa Required" && "${VISATEXT}" != "Visa Not Required" && "${VISATEXT}" != "eVisa" && "${VISATEXT}" != "Admission Refused" ]]; then
+        shopt -u nocasematch
+
+        #############################################
+        ## VISA TYPE FILTERING                     ##
+        #############################################
+
+        # Sadly because we're dealing with user-created content, it tends to be full of inconsistencies
+        # This is the part of the code you might need to add to every now and then, don't blame me for how hideous this looks
+        # Also, a few rules are kind of one-or-the-other (e.g "Visa on arrival or E-Visa"), I err on the side of caution (eVisa)
+
+        # Get rid of text that's never useful
+        VISATEXT=$(echo $VISATEXT | sed -e 's/ (Conditional)//gi' -e 's/ (temporary)//gi' -e 's/^Free //gi')
+
+        # eVisa Section
+        if [[ $VISATEXT = "EVisa"* ]]; then       VISATEXT="eVisa";
+        elif [[ $VISATEXT = "Electronic"* ]]; then  VISATEXT="eVisa";
+        elif [[ $VISATEXT = "E-"* ]]; then  VISATEXT="eVisa";
+        elif [[ $VISATEXT = "e-"* ]]; then  VISATEXT="eVisa";
+        elif [[ $VISATEXT = *"e600"* ]]; then  VISATEXT="eVisa";       fi
+        VISATEXT=$(echo $VISATEXT |  sed -e 's/eVisa\/eNTRI/eVisa/g' -e 's/ASAN Electronic Visa/eVisa/gi' -e 's/On-line registration or eVisa/eVisa/gi' -e 's/eVisa required/eVisa/gi' -e 's/eVisitor/eVisa/gi' -e 's/^eTA$/eVisa/gi' -e 's/Online registration or eVisa/eVisa/gi' -e 's/Visa On Arrival in advance/eVisa/gi' -e 's/Visa on arrival or E-Visa/eVisa/gi' -e 's/Reciprocity fee in advance/eVisa/gi' -e 's/eVisa &amp; Visa on Arrival/eVisa/gi')
+
+        # Visa Section
+        # Lots of different phrases refer to the same thing. Change them all to 'Visa'
+        VISATEXT=$(echo $VISATEXT | sed -e 's/Entry Permit/Visa/gi' -e 's/Entry Clearance/Visa/gi' -e 's/Visitor&#39;s Permit/Visa/gi' -e 's/^Permit/Visa/gi' -e 's/Tourist Card/Visa/gi' -e 's/Travel Certificate/Visa/gi')
+
+        # Visa Not Reqired
+        if [[ $VISATEXT = *"reciprocity fee"* ]]; then      VISATEXT="Visa Not Required";
+        elif [[ $VISATEXT = *"Visa On Arr"* ]]; then        VISATEXT="Visa Not Required";
+        elif [[ $VISATEXT = *"Visa on arr"* ]]; then        VISATEXT="Visa Not Required";
+        elif [[ $VISATEXT = *"visa on arr"* ]]; then        VISATEXT="Visa Not Required";
+        elif [[ $VISATEXT = "Visa not req"* ]]; then        VISATEXT="Visa Not Required";   fi
+        VISATEXT=$(echo $VISATEXT | sed -e 's/Visa Waiver Program/Visa Not Required/gi' -e 's/Freedom of movement/Visa Not Required/gi' -e 's/Multiple-entry visa on arrival/Visa Not Required/gi' -e 's/Visa is granted on arrival/Visa Not Required/gi' -e 's/Visa arrival/Visa Not Required/gi' -e 's/Visa not$/Visa Not Required/gi')
+
+        # Visa Required
+        if [[ $VISATEXT = "Visa req"* ]]; then      VISATEXT="Visa Required"; fi # People actually misspell the word "required"...
+        VISATEXT=$(echo $VISATEXT | sed -e 's/Visa or eTA required/Visa Required/gi' -e 's/Special provisions/Visa Required/gi' -e 's/Admission partially refused \/ partially allowed/Visa Required/gi' -e 's/Affidavit of Identity required/Visa Required/gi' -e 's/Visa is required/Visa Required/gi' -e 's/Visa on arrival but prior approval required/Visa Required/gi' -e 's/Visa de facto required/Visa Required/gi' -e 's/Special authorization required/Visa Required/gi' -e 's/Disputed/Visa Required/gi')
+
+        # Admission Refused
+        if [[ $VISATEXT = "Admission Refused"* ]];     then  VISATEXT="Admission Refused";
+        elif [[ $VISATEXT = "Entry Not Permitted"* ]]; then  VISATEXT="Admission Refused";
+        elif [[ $VISATEXT = "Travel banned"* ]]; then  VISATEXT="Admission Refused"; fi
+        VISATEXT=$(echo $VISATEXT | sed -e 's/Invalid passport/Admission Refused/gi' -e 's/Not recognized/Admission Refused/gi')
+
+        # Random - This is where entries are just completely off and you have to add a manual exception
+        if [[ $VISATEXT = "With "* ]]; then VISATEXT="Visa Required";       fi
+
+      fi
+
+
+
+      #############################################
+      ## VISA INFO CAPTURE                       ##
+      #############################################
+
+      # Grabs info on the length of stay.
+      # egrep - Grab any number if it's followed by the word Day(s) or Month(s)
+      #
+      INFO=$(echo $i | jq -r '.children[2].text' | egrep -i -o '^[0-9]\w (Day(s|)|Month(s|))$')
+
+      # Validation
+      INFO=$(echo "$INFO" | sed 's/"/\&#34;/g' | tr -d -c '[:alnum:]:/\-?.=£*()[]#+&;_!@%\\ ')
+
+
+
+      #############################################
+      ## VALIDATE AND ADD TO DB                  ##
+      #############################################
+
+      echo "$DB_COUNTRY ($DB_ID) to $TOCOUNTRY ($TOCOUNTRYID) - $VISATEXT - $INFO"
+
+      # Check against local DB pull, if it's different then update or add
+      VISAINFO_CHECKFORSTRING="${DB_ID},${TOCOUNTRYID},${VISATEXT},${INFO}"
+      echo "${VISAINFO_LOCAL[${DB_ID}]}" | grep -i -q "${VISAINFO_CHECKFORSTRING}"
+
+      if [ $? -ne 0 ];then
+
+        DOESITEXIST=$(${MYSQL_CMD} -N -e "SELECT count(*) FROM VisaInfo WHERE countryFromId=\"${DB_ID}\" AND countryToId=\"${TOCOUNTRYID}\"")
+        if [ $DOESITEXIST -eq 0 ]; then
+          ${MYSQL_CMD} -N -e "INSERT INTO VisaInfo (countryFromId, countryToId, visaInfo, additionalInfo) VALUES ('${DB_ID}', '${TOCOUNTRYID}', '${VISATEXT}', '${INFO}')"
+        else
+          ${MYSQL_CMD} -N -e "UPDATE VisaInfo SET visaInfo='${VISATEXT}', additionalInfo='${INFO}' WHERE countryFromId='${DB_ID}' AND countryToId='${TOCOUNTRYID}'"
+        fi
+
+      fi
+
+    done < <(echo "${FILTER}")
+
+  fi
 
 done
-
 
 
 
@@ -270,14 +301,14 @@ done
 ## CHECK INCONSISTENCIES AND NOTIFY        ##
 #############################################
 
-COUNT_INCONSISTENCIES=$(${MYSQL_CMD} -N -e "SELECT count(*) FROM VisaInfo WHERE visaInfo != 'Visa required' AND visaInfo != 'Visa Not Required' AND visaInfo != 'eVisa' AND visaInfo != 'Entry Not Permitted'")
+COUNT_INCONSISTENCIES=$(${MYSQL_CMD} -N -e "SELECT count(*) FROM VisaInfo WHERE visaInfo != 'Visa required' AND visaInfo != 'Visa Not Required' AND visaInfo != 'eVisa' AND visaInfo != 'Admission Refused'")
 if [ "${COUNT_INCONSISTENCIES}" -gt 0 ]; then
 
   # Find any times an incorrect Visa Type slipped through the net
-  INCONSISTENCIES=$(${MYSQL_CMD} -N -e "SELECT DISTINCT visaInfo FROM VisaInfo WHERE visaInfo != 'Visa required' AND visaInfo != 'Visa Not Required' AND visaInfo != 'eVisa' AND visaInfo != 'Entry Not Permitted'")
+  INCONSISTENCIES=$(${MYSQL_CMD} -N -e "SELECT DISTINCT visaInfo FROM VisaInfo WHERE visaInfo != 'Visa required' AND visaInfo != 'Visa Not Required' AND visaInfo != 'eVisa' AND visaInfo != 'Admission Refused'")
 
   DATE_FORMAT=$(date +%Y-%m-%d-%H-%M-%S)
-  echo -e "Visa Script Ran At: ${DATE} \nInconsistencies were found, the VisaInfo column should consist only of the following entries: 'Visa Required', 'Visa Not Reqired', 'eVisa' and 'Entry Not Permitted'.\n\nBelow is a list of inconsistencies found on the latest Wikipedia scan.\n${INCONSISTENCIES}\n\nPlease add the exceptions above into the 'VISA TYPE FILTERING' section of the scan script." >> /tmp/visaScan-${DATE_FORMAT}
-  echo -e "\nThere were inconsistencies! Please review the contents of /tmp/visaScan-${DATE_FORMAT}\n"
+  echo -e "Visa Script Ran At: ${DATE} \nInconsistencies were found, the VisaInfo column should consist only of the following entries: 'Visa Required', 'Visa Not Reqired', 'eVisa' and 'Admission Refused'.\n\nBelow is a list of inconsistencies found on the latest Wikipedia scan.\n${INCONSISTENCIES}\n\nPlease add the exceptions above into the 'VISA TYPE FILTERING' section of the scan script." >> /tmp/visaScan-Issues-${DATE_FORMAT}
+  echo -e "\nThere were inconsistencies! Please review the contents of /tmp/visaScan-Issues-${DATE_FORMAT}\n"
 
 fi
