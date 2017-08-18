@@ -138,9 +138,6 @@ do
     echo -e "Skipping ${DB_COUNTRY} (${DB_ID}): Cached file matches latest pull - therefore there are no updates.\n"
   else
 
-    # If cached data differs from latest pull, update the cache file
-    echo "${FILTER}" > ${COUNTRY_CACHE_FILE};
-
 
     while read i; do
 
@@ -266,10 +263,11 @@ do
       # Grabs info on the length of stay.
       # egrep - Grab any number if it's followed by the word Day(s) or Month(s)
       #
-      INFO=$(echo $i | jq -r '.children[2].text' | egrep -i -o '^[0-9]\w (Day(s|)|Month(s|))$')
+      INFO=$(echo $i | jq -r '.children[2].text' | egrep -i -o '^[[:digit:]]{1,3} (Day|Week|Month|Year)(s|)(;|,|\.|$)')
+
 
       # Validation
-      INFO=$(echo "$INFO" | sed 's/"/\&#34;/g' | tr -d -c '[:alnum:]:/\-?.=£*()[]#+&;_!@%\\ ')
+      INFO=$(echo "$INFO" | sed 's/"/\&#34;/g' | tr -d -c '[:alnum:] ')
 
 
 
@@ -295,6 +293,9 @@ do
       fi
 
     done < <(echo "${FILTER}")
+
+  # If cached data differs from latest pull, update the cache file
+  echo "${FILTER}" > ${COUNTRY_CACHE_FILE};
 
   fi
 
