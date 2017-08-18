@@ -216,9 +216,10 @@ do
         # Sadly because we're dealing with user-created content, it tends to be full of inconsistencies
         # This is the part of the code you might need to add to every now and then, don't blame me for how hideous this looks
         # Also, a few rules are kind of one-or-the-other (e.g "Visa on arrival or E-Visa"), I err on the side of caution (eVisa)
+        # These sed replaces use regex so don't forget to escape special characters such as brackets \( \) and slashes \/
 
         # Get rid of text that's never useful
-        VISATEXT=$(echo $VISATEXT | sed -e 's/ (Conditional)//gi' -e 's/ (temporary)//gi' -e 's/^Free //gi')
+        VISATEXT=$(echo $VISATEXT | sed -r 's/( \(Conditional\)| \(temporary\)|^Free )//gi')
 
         # eVisa Section
         if [[ $VISATEXT = "EVisa"* ]]; then       VISATEXT="eVisa";
@@ -226,13 +227,11 @@ do
         elif [[ $VISATEXT = "E-"* ]]; then  VISATEXT="eVisa";
         elif [[ $VISATEXT = "e-"* ]]; then  VISATEXT="eVisa";
         elif [[ $VISATEXT = *"e600"* ]]; then  VISATEXT="eVisa";       fi
-#        VISATEXT=$(echo $VISATEXT |  sed -e 's/eVisa\/eNTRI/eVisa/g' -e 's/ASAN Electronic Visa/eVisa/gi' -e 's/On-line registration or eVisa/eVisa/gi' -e 's/eVisa required/eVisa/gi' -e 's/eVisitor/eVisa/gi' -e 's/^eTA$/eVisa/gi' -e 's/Online registration or eVisa/eVisa/gi' -e 's/Visa On Arrival in advance/eVisa/gi' -e 's/Visa on arrival or E-Visa/eVisa/gi' -e 's/Reciprocity fee in advance/eVisa/gi' -e 's/eVisa &amp; Visa on Arrival/eVisa/gi')
         VISATEXT=$(echo $VISATEXT | sed -r 's/(eVisa\/eNTRI|ASAN Electronic Visa|On-line registration or eVisa|eVisa required|eVisitor|^eTA$|Online registration or eVisa|Visa On Arrival in advance|Visa on arrival or E-Visa|Reciprocity fee in advance|eVisa &amp; Visa on Arrival)/eVisa/gi')
 
 
         # Visa Section
         # Lots of different phrases refer to the same thing. Change them all to 'Visa'
-#        VISATEXT=$(echo $VISATEXT | sed -e 's/Entry Permit/Visa/gi' -e 's/Entry Clearance/Visa/gi' -e 's/Visitor&#39;s Permit/Visa/gi' -e 's/^Permit/Visa/gi' -e 's/Tourist Card/Visa/gi' -e 's/Travel Certificate/Visa/gi')
         VISATEXT=$(echo $VISATEXT | sed -r 's/(Entry Permit|Entry Clearance|Visitor&#39;s Permit|^Permit|Tourist Card|Travel Certificate)/Visa/gi')
 
         # Visa Not Reqired
@@ -241,19 +240,16 @@ do
         elif [[ $VISATEXT = *"Visa on arr"* ]]; then        VISATEXT="Visa Not Required";
         elif [[ $VISATEXT = *"visa on arr"* ]]; then        VISATEXT="Visa Not Required";
         elif [[ $VISATEXT = "Visa not req"* ]]; then        VISATEXT="Visa Not Required";   fi
-#        VISATEXT=$(echo $VISATEXT | sed -e 's/Visa Waiver Program/Visa Not Required/gi' -e 's/Freedom of movement/Visa Not Required/gi' -e 's/Multiple-entry visa on arrival/Visa Not Required/gi' -e 's/Visa is granted on arrival/Visa Not Required/gi' -e 's/Visa arrival/Visa Not Required/gi' -e 's/Visa not$/Visa Not Required/gi')
         VISATEXT=$(echo $VISATEXT | sed -r 's/(Visa Waiver Program|Freedom of movement|Multiple-entry visa on arrival|Visa is granted on arrival|Visa arrival|Visa not$)/Visa Not Required/gi')
 
         # Visa Required
         if [[ $VISATEXT = "Visa req"* ]]; then      VISATEXT="Visa Required"; fi # People actually misspell the word "required"...
-#        VISATEXT=$(echo $VISATEXT | sed -e 's/Visa or eTA required/Visa Required/gi' -e 's/Special provisions/Visa Required/gi' -e 's/Admission partially refused \/ partially allowed/Visa Required/gi' -e 's/Affidavit of Identity required/Visa Required/gi' -e 's/Visa is required/Visa Required/gi' -e 's/Visa on arrival but prior approval required/Visa Required/gi' -e 's/Visa de facto required/Visa Required/gi' -e 's/Special authorization required/Visa Required/gi' -e 's/Disputed/Visa Required/gi')
         VISATEXT=$(echo $VISATEXT | sed -r 's/(Visa or eTA required|Special provisions|Admission partially refused \/ partially allowed|Affidavit of Identity required|Visa is required|Visa on arrival but prior approval required|Visa de facto required|Special authorization required|Disputed)/Visa Required/gi')
 
         # Admission Refused
         if [[ $VISATEXT = "Admission Refused"* ]];     then  VISATEXT="Admission Refused";
         elif [[ $VISATEXT = "Entry Not Permitted"* ]]; then  VISATEXT="Admission Refused";
         elif [[ $VISATEXT = "Travel banned"* ]]; then  VISATEXT="Admission Refused"; fi
-#        VISATEXT=$(echo $VISATEXT | sed -e 's/Invalid passport/Admission Refused/gi' -e 's/Not recognized/Admission Refused/gi')
         VISATEXT=$(echo $VISATEXT | sed -r 's/(Invalid passport|Not recognized)/Admission Refused/gi')
 
         # Random - This is where entries are just completely off and you have to add a manual exception
