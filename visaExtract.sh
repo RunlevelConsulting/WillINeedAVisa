@@ -311,7 +311,7 @@ if [ "${COUNT_INCONSISTENCIES}" -gt 0 ]; then
   INCONSISTENCIES=$(${MYSQL_CMD} -N -e "SELECT DISTINCT visaInfo FROM VisaInfo WHERE visaInfo != 'Visa required' AND visaInfo != 'Visa Not Required' AND visaInfo != 'eVisa' AND visaInfo != 'Admission Refused'")
 
   DATE_FORMAT=$(date +%Y-%m-%d-%H-%M-%S)
-  echo -e "Visa Script Ran At: ${DATE} \nInconsistencies were found, the VisaInfo column should consist only of the following entries: 'Visa Required', 'Visa Not Reqired', 'eVisa' and 'Admission Refused'.\n\nBelow is a list of inconsistencies found on the latest Wikipedia scan.\n${INCONSISTENCIES}\n\nPlease add the exceptions above into the 'VISA TYPE FILTERING' section of the scan script." >> /tmp/visaScan-Issues-${DATE_FORMAT}
-  echo -e "\nThere were inconsistencies! Please review the contents of /tmp/visaScan-Issues-${DATE_FORMAT}\n"
+  echo -e "Visa Script Ran At: ${DATE} \nInconsistencies were found, the VisaInfo column should consist only of the following entries: 'Visa Required', 'Visa Not Reqired', 'eVisa' and 'Admission Refused'.\n\nBelow is a list of inconsistencies found on the latest Wikipedia scan.\n${INCONSISTENCIES}\n\nPlease add the exceptions above into the 'VISA TYPE FILTERING' section of the scan script." >> /tmp/visaScan-Inconsistencies-${DATE_FORMAT}
+  echo -e "\nThere were inconsistencies! Please review the contents of /tmp/visaScan-Inconsistencies-${DATE_FORMAT}\n"
 
 fi
