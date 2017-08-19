@@ -17,8 +17,7 @@ The Will I Need A Visa website, database structure and maintenance scripts are a
 
 Will I Need A Visa uses the following languages: **BASH, sed, PHP,  HTML, CSS, Javascript (inc. AJAX & JQuery) and SQL**
 
-
-----------
+&nbsp;
 
 ## Dependencies
 
@@ -31,7 +30,8 @@ Will I Need A Visa uses the following languages: **BASH, sed, PHP,  HTML, CSS, J
 | MySQL Client/Server | Store Visa Data |  Package Manager    |
 > **NOTE:** Ensure all commands and binaries are located in one of your $PATH directories and are executable.
 
-----------
+
+&nbsp;
 
 
 ## Getting Started
@@ -79,7 +79,7 @@ It will then begin iterating through each country's Wikipedia page, extracting t
 
 
 
-----------
+&nbsp;
 
 
 ## Script Arguments and Caching
@@ -98,8 +98,7 @@ Running  ``` ./visaExtract.sh <COUNTRYID> ``` will delete the cache file for tha
 Despite the optimisations the **visaExtract.sh** script has, you may want to keep your database up-to-date without running a full scan of all 200+ countries.
 Running ```./visaExtract.sh RANDOM``` will scan a single, random country. This is a useful command to run as a **cron job** as all your records will all eventually be updated depending on how frequently it runs.
 
-----------
-
+&nbsp;
 
 ## Script Inconsistencies and Maintenance
 
@@ -125,8 +124,7 @@ Let's imagine a country's visa status on Wikipedia is "_Not Allowed_", this is b
 So it's simply a case of adding inconsistencies as they arise into the _sed_ statements separated by a pipe.
 
 
-----------
-
+&nbsp;
 
 ## Credits
 
