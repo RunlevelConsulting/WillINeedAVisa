@@ -22,14 +22,14 @@ Will I Need A Visa uses the following languages: **BASH, sed, PHP,  HTML, CSS, J
 
 ## Dependencies
 
- | Tool     | Purpose | Available From   | Notes | 
-| :------- | :----: | :--- | :--- |
-| jq     | JSON Parser    |  Package Manager or https://github.com/stedolan/jq  |Ensure the binary is in your default PATH|
-| pup    | HTML Parser   |  https://github.com/ericchiang/pup/releases   |Ensure the binary is in your default PATH| 
-| curl | Pulls Web Data |  Package Manager    |  |
-| Webserver with PHP | Display Webpages |  Package Manager    |  |
-| MySQL Client/Server | Store Visa Data |  Package Manager    |  |
-
+ | Tool     | Purpose | Available From   |
+| :------- | :---- | :--- |
+| jq     | JSON Parser    |  Package Manager or https://github.com/stedolan/jq  |
+| pup    | HTML Parser   |  https://github.com/ericchiang/pup/releases   |
+| curl | Pulls Web Data |  Package Manager    |
+| Webserver with PHP | Display Webpages |  Package Manager    |
+| MySQL Client/Server | Store Visa Data |  Package Manager    |
+> **NOTE:** Ensure all commands and binaries are located in one of your $PATH directories and are executable.
 
 ----------
 
