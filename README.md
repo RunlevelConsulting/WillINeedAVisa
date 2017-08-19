@@ -96,7 +96,6 @@ Running ``` ./visaExtract.sh NOCACHE ``` will delete all cache files and do a fu
 Running  ``` ./visaExtract.sh <COUNTRYID> ``` will delete the cache file for that particular country ID and do a new scan of that country only.
 
 #### Random
-Despite the optimisations the **visaExtract.sh** script has, you may want to keep your database up-to-date without running a full scan of all 200+ countries.
 
 Running ```./visaExtract.sh RANDOM``` will scan a single, random country. This is a useful command to run as a **cron job** as all your records will all eventually be updated depending on how frequently it runs.
 
