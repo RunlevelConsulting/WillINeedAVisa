@@ -77,8 +77,10 @@ if [[ "${COUNT_COUNTRIES}" -eq 0 || "${COUNT_COUNTRIESALIASES}" -eq 0 ]];  then
 fi
 
 
-# If first argument of script is 'RANDOM' then only scan a single country, otherwise do all
+# If first argument of script is 'RANDOM' then only scan a single country
+# If first argument of script is 'NOCACHE', delete entire cache and do a full run
 # If first argument is a number, then only run script against that country ID
+# Otherwise just do a full run using whatever caches exist
 if [[ "${1}" == "RANDOM" ]]; then
   ORDER_BY="ORDER BY RAND() LIMIT 1"
 elif [[ "${1}" == "NOCACHE" ]]; then
@@ -265,7 +267,6 @@ do
       # egrep - Grab any number if it's followed by the word Day(s) or Month(s)
       #
       INFO=$(echo ${i} | jq -r '.children[2].text' | egrep -i -o '^[[:digit:]]{1,3} (Day|Week|Month|Year)(s|)(;|,|\.|$)')
-
 
       # Validation
       INFO=$(echo "${INFO}" | sed 's/"/\&#34;/g' | tr -d -c '[:alnum:] ')
