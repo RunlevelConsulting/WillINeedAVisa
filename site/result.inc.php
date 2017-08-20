@@ -27,7 +27,7 @@ if (is_numeric($_GET['fromId']) && is_numeric($_GET['toId'])){
 
     }
 
-    if (strtolower($visaInfo) == "visa required"){
+    elseif (strtolower($visaInfo) == "visa required"){
       if ($additionalInfo != ""){ $addThis="- Valid for $additionalInfo"; }
 
       $bigMessage="Yes, you need a visa!";
@@ -36,7 +36,7 @@ if (is_numeric($_GET['fromId']) && is_numeric($_GET['toId'])){
 
     }
 
-    if (strtolower($visaInfo) == "evisa"){
+    elseif (strtolower($visaInfo) == "evisa"){
       if ($additionalInfo != ""){ $addThis="- Valid for $additionalInfo"; }
 
       $bigMessage="Yes, you need an E-Visa!";
@@ -45,10 +45,16 @@ if (is_numeric($_GET['fromId']) && is_numeric($_GET['toId'])){
 
     }
 
-    if (strtolower($visaInfo) == "admission refused"){
+    elseif (strtolower($visaInfo) == "admission refused"){
       $bigMessage="Entry is not permitted";
       $smallMessage="Citizens of this country will be refused entry. Sorry :(";
       $oneWord=":(";
+    }
+
+    else {
+      $bigMessage="Sorry";
+      $smallMessage="There's a problem with this entry, we'll fix it ASAP!";
+      $oneWord="???";
     }
 
 ?>
