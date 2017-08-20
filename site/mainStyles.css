@@ -346,25 +346,6 @@ p.divider.hide:before, p.divider.hide:after {
   padding-top: 6em;
 }
 
-
-.site-details {
-  position: absolute;
-  left: 10px;
-  bottom: 10px;
-  font-size: 14px;
-  color: #f2e3bc;
-  z-index: 1001;
-}
-
-.site-details ul {
-  list-style: none;
-}
-
-.site-details ul li {
-  display: inline-block;
-  margin-right: 10px;
-}
-
 @keyframes rotate360 {
   to { transform: rotate(180deg); }
 }
