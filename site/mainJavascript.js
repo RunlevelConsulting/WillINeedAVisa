@@ -38,7 +38,6 @@ $('#select-nationality, #select-destination').on('change', function(){
     // AJAX
     var fromId=$('#select-nationality').val();
     var toId=$('#select-destination').val();
-    $('#search-result').html("<br><br><br><br>Loading...");
 
     var ajax_getResult = $.ajax({url: "result.inc.php", type: "GET", data: {
       ajax_request: true,
