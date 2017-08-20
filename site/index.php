@@ -37,9 +37,7 @@ if (is_numeric($_GET['toId'])){
   <meta name="author" content="">
   <meta name="viewport" content="width=device-width" />
   <link rel="shortcut icon" type="image/x-icon" href="favicon.png">
-
   <link href="https://fonts.googleapis.com/css?family=Fjalla+One" rel="stylesheet">
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css"/>
   <link rel="stylesheet" href="mainStyles.css"/>
 
   <!--[if lt IE 9]>
@@ -50,7 +48,6 @@ if (is_numeric($_GET['toId'])){
 <body>
 
   <div class="content-wrapper">
-
     <div class="content-main">
       <h1 class="title-primary">Will I need a visa?</h1>
       <form method="GET" action="/">
@@ -154,11 +151,6 @@ if (is_numeric($_GET['toId'])){
         </div>
       </div>
 
-      <div class="site-details">
-        <ul>
-          <li>(c) Will I Need A Visa - 2017</li>
-        </ul>
-      </div>
 
       <div style="position: absolute; height: 14em; left: 0; width: 100%; bottom: 0; background:; overflow: hidden;">
         <div style="position: relative; width: 100%; height: 100%;">
