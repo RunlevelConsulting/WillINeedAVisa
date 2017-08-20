@@ -2,7 +2,7 @@
 
 ## Overview
 
-I've been fortunate enough to travel to numerous countries around the world and I noticed there wasn't a clean and simple website out there which allowed you to quickly check the visa requirements of any country you might wish to travel to. 
+I've been fortunate enough to travel to numerous countries around the world and I noticed there wasn't a clean and simple website out there which allowed me to quickly check the visa requirements of any country I might want to travel to. 
 
 I wanted to create a website that fulfilled the following criteria:
 
@@ -132,5 +132,9 @@ So it's simply a case of adding inconsistencies as they arise into the _sed_ sta
 
 ## Credits
 
-##### **HTML/CSS Front-End Design**: Olivia Ng (https://github.com/oliviale) 
-##### **Everything Else**: Daniel Hughes (https://github.com/RunlevelConsulting)
+##### **HTML/CSS Front-End Design**:
+
+Olivia Ng (https://github.com/oliviale) 
+##### **Everything Else**: 
+
+Daniel Hughes (https://github.com/RunlevelConsulting)
