@@ -6,12 +6,15 @@ I've been fortunate enough to travel to numerous countries around the world and 
 
 I wanted to create a website that fulfilled the following criteria:
 
+ - Is open-source
  - Is useful and accurate
- - Quick to build
+ - Is quick to build
  - Is automated and requires no - or very minimal - maintenance
  - Answers a specific question an individual may type into Google
 
-This seems to fit the bill. All the website data is pulled from Wikipedia and is therefore maintained by their contributors which is the best bet to keep the information relevant. The script that maintains Will I Need A Visa does what it can to filter out human-created anomalies and maintain consistency in the information provided.
+This seems to fit the bill. All the website data is pulled from over 200 Wikipedia and is therefore maintained by their contributors which is the best bet to keep the information relevant. The Wikipedia pages are buried away and a bit bland to look at, Will I Need A Visa provides a clean and quick front-end for such a large amount of data.
+
+The script that maintains Will I Need A Visa does what it can to filter out human-created anomalies and maintain consistency in the information provided.
 
 The Will I Need A Visa website, database structure and maintenance scripts are all completely open source for anyone to use.
 
