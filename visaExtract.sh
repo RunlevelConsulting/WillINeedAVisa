@@ -224,7 +224,7 @@ do
         elif [[ ${VISATEXT} = "Electronic"* ]]; then  VISATEXT="eVisa";
         elif [[ ${VISATEXT} = "E-"* ]]; then  VISATEXT="eVisa";
         elif [[ ${VISATEXT} = *"e600"* ]]; then  VISATEXT="eVisa";       fi
-        VISATEXT=$(echo ${VISATEXT} | sed -r 's/(eVisa\/eNTRI|ASAN Electronic Visa|On-line registration or eVisa|eVisa required|eVisitor|^eTA$|Online registration or eVisa|Visa On Arrival in advance|Visa on arrival or E-Visa|Reciprocity fee in advance|eVisa &amp; Visa on Arrival)/eVisa/gi')
+        VISATEXT=$(echo ${VISATEXT} | sed -r 's/(Visa Waiver Program|eVisa\/eNTRI|ASAN Electronic Visa|On-line registration or eVisa|eVisa required|eVisitor|^eTA$|Online registration or eVisa|Visa On Arrival in advance|Visa on arrival or E-Visa|Reciprocity fee in advance|eVisa &amp; Visa on Arrival)/eVisa/gi')
 
         # Visa Section
         # Lots of different phrases refer to the same thing. Change them all to 'Visa'
@@ -234,7 +234,7 @@ do
         if [[ ${VISATEXT} = *"reciprocity fee"* ]]; then      VISATEXT="Visa Not Required";
         elif [[ ${VISATEXT} = *"visa on arr"* ]]; then        VISATEXT="Visa Not Required";
         elif [[ ${VISATEXT} = "Visa not req"* ]]; then        VISATEXT="Visa Not Required";   fi
-        VISATEXT=$(echo ${VISATEXT} | sed -r 's/(Visa Waiver Program|Freedom of movement|Multiple-entry visa on arrival|Visa is granted on arrival|Visa arrival|Visa not$)/Visa Not Required/gi')
+        VISATEXT=$(echo ${VISATEXT} | sed -r 's/(Freedom of movement|Multiple-entry visa on arrival|Visa is granted on arrival|Visa arrival|Visa not$)/Visa Not Required/gi')
 
         # Visa Required
         if [[ ${VISATEXT} = "Visa req"* ]]; then      VISATEXT="Visa Required"; fi # People actually misspell the word "required"...
