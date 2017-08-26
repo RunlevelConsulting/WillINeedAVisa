@@ -119,7 +119,7 @@ do
   # Get all visa info for this particular country and store to a local variable
   # Breaking this down into an array by country instead of a monolithic variable with all countries totalling tens of thousands of lines speeds up the script considerably
   #
-  VISAINFO_LOCAL[${DB_ID}]=$(${MYSQL_CMD} -N -e "SELECT countryFromId, countryToId, VisaInfo, additionalInfo FROM VisaInfo WHERE countryFromId=${DB_ID};" | sed -e 's/\t/,/g')
+  VISAINFO_LOCAL[${DB_ID}]=$(${MYSQL_CMD} -N -e "SELECT countryFromId, countryToId, VisaInfo, additionalInfo FROM VisaInfo WHERE countryFromId=${DB_ID};" | sed -e 's/\t/,/g' -e 's/$/,/g')
 
   # This file acts as a cache, if the data in this file is the same as the data pulled from the curl below, then we know nothing has changed and this country can be skipped
   COUNTRY_CACHE_FILE="/tmp/visaScan-Country-${DB_ID}.json"; touch "${COUNTRY_CACHE_FILE}";
@@ -280,7 +280,7 @@ do
       echo "${DB_COUNTRY} ($DB_ID) to ${TOCOUNTRY} ($TOCOUNTRYID) - ${VISATEXT} - ${INFO}"
 
       # Check against local DB pull, if it's different then update or add
-      VISAINFO_CHECKFORSTRING="${DB_ID},${TOCOUNTRYID},${VISATEXT},${INFO}"
+      VISAINFO_CHECKFORSTRING="${DB_ID},${TOCOUNTRYID},${VISATEXT},${INFO},"
       echo "${VISAINFO_LOCAL[${DB_ID}]}" | grep -i -q "${VISAINFO_CHECKFORSTRING}"
 
       if [ $? -ne 0 ];then
