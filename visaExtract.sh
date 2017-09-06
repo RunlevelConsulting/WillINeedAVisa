@@ -243,6 +243,7 @@ do
         # Admission Refused
         if [[ ${VISATEXT} = "Admission Refused"* ]];     then  VISATEXT="Admission Refused";
         elif [[ ${VISATEXT} = "Entry Not Permitted"* ]]; then  VISATEXT="Admission Refused";
+        elif [[ ${VISATEXT} = "Travel restricted"* ]]; then  VISATEXT="Admission Refused";
         elif [[ ${VISATEXT} = "Travel banned"* ]]; then  VISATEXT="Admission Refused"; fi
         VISATEXT=$(echo ${VISATEXT} | sed -r 's/(Invalid passport|Not recognized)/Admission Refused/gi')
 
