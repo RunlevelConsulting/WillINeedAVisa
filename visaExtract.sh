@@ -176,7 +176,7 @@ do
       echo "${ALLCOUNTRIES_LOCAL}" | grep -i -q "${ALLCOUNTRIES_CHECKFORSTRING}"$
 
       if [ $? -ne 0 ];then
-        echo -e "Problem: ${TOCOUNTRY} doesn't exist - ${DB_LINK}\nPlease input ${TOCOUNTRY} into the CountriesAliases table in your database."; exit 6;
+        TOCOUNTRYID="null"
       else
         TOCOUNTRYID=$(echo "${ALLCOUNTRIES_LOCAL}" | grep -i "|${TOCOUNTRY}"$ | cut -d '|' -f2)
       fi
@@ -284,7 +284,8 @@ do
       VISAINFO_CHECKFORSTRING="${DB_ID},${TOCOUNTRYID},${VISATEXT},${INFO},"
       echo "${VISAINFO_LOCAL[${DB_ID}]}" | grep -i -q "${VISAINFO_CHECKFORSTRING}"
 
-      if [ $? -ne 0 ];then
+
+      if [[ $? -ne 0 && "${TOCOUNTRYID}" != "null" ]]; then
 
         DOESITEXIST=$(${MYSQL_CMD} -N -e "SELECT count(*) FROM VisaInfo WHERE countryFromId=\"${DB_ID}\" AND countryToId=\"${TOCOUNTRYID}\"")
         if [ ${DOESITEXIST} -eq 0 ]; then
