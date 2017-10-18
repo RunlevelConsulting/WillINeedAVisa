@@ -278,14 +278,14 @@ do
       ## VALIDATE AND ADD TO DB                  ##
       #############################################
 
-      echo "${DB_COUNTRY} ($DB_ID) to ${TOCOUNTRY} ($TOCOUNTRYID) - ${VISATEXT} - ${INFO}"
-
       # Check against local DB pull, if it's different then update or add
       VISAINFO_CHECKFORSTRING="${DB_ID},${TOCOUNTRYID},${VISATEXT},${INFO},"
       echo "${VISAINFO_LOCAL[${DB_ID}]}" | grep -i -q "${VISAINFO_CHECKFORSTRING}"
 
 
       if [[ $? -ne 0 && "${TOCOUNTRYID}" != "null" ]]; then
+
+        echo "${DB_COUNTRY} ($DB_ID) to ${TOCOUNTRY} ($TOCOUNTRYID) - ${VISATEXT} - ${INFO}"
 
         DOESITEXIST=$(${MYSQL_CMD} -N -e "SELECT count(*) FROM VisaInfo WHERE countryFromId=\"${DB_ID}\" AND countryToId=\"${TOCOUNTRYID}\"")
         if [ ${DOESITEXIST} -eq 0 ]; then
