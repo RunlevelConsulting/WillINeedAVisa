@@ -242,6 +242,7 @@ do
 
         # Admission Refused
         if [[ ${VISATEXT} = "Admission Refused"* ]];     then  VISATEXT="Admission Refused";
+        elif [[ ${VISATEXT} = *"sion refused" ]]; then  VISATEXT="Admission Refused";
         elif [[ ${VISATEXT} = "Entry Not Permitted"* ]]; then  VISATEXT="Admission Refused";
         elif [[ ${VISATEXT} = "Travel restricted"* ]]; then  VISATEXT="Admission Refused";
         elif [[ ${VISATEXT} = "Travel banned"* ]]; then  VISATEXT="Admission Refused"; fi
