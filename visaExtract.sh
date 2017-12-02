@@ -57,7 +57,7 @@ if ! ${MYSQL_CMD} -e "USE ${DB_DATABASE}"; then
   echo -e "\nDatabase doesn't exist, creating and importing data...\n"
 
   # Create Database
-  mysql -u ${DB_USERNAME} -p${DB_PASSWORD} -h ${DB_HOSTNAME} -e "CREATE DATABASE IF NOT EXISTS ${DB_DATABASE};"
+  mysql -u ${DB_USERNAME} -p${DB_PASSWORD} -h ${DB_HOSTNAME} -e "CREATE DATABASE IF NOT EXISTS ${DB_DATABASE}; ALTER DATABASE willineedavisa CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci; SET NAMES utf8mb4; SET character_set_server = utf8mb4; SET collation_connection = utf8mb4_unicode_ci; SET collation_server = utf8mb4_unicode_ci;"
   if [[ "$?" -ne 0 ]]; then
     echo -e "\nCouldn't create database!\nIt may be the case that your DB user lacks the privileges to create databases in which case you'll need to do this manually with a sufficiently privileged MySQL user.\n"; exit 4;
   fi
@@ -320,7 +320,7 @@ if [ "${COUNT_INCONSISTENCIES}" -gt 0 ]; then
   INCONSISTENCIES=$(${MYSQL_CMD} -N -e "SELECT DISTINCT visaInfo FROM VisaInfo WHERE visaInfo != 'Visa required' AND visaInfo != 'Visa Not Required' AND visaInfo != 'eVisa' AND visaInfo != 'Admission Refused'")
 
   DATE_FORMAT=$(date +%Y-%m-%d-%H-%M-%S)
-  echo -e "Visa Script Ran At: ${DATE} \nInconsistencies were found, the VisaInfo column should consist only of the following entries: 'Visa Required', 'Visa Not Reqired', 'eVisa' and 'Admission Refused'.\n\nBelow is a list of inconsistencies found on the latest Wikipedia scan.\n${INCONSISTENCIES}\n\nPlease add the exceptions above into the 'VISA TYPE FILTERING' section of the scan script." >> /tmp/visaScan-Inconsistencies-${DATE_FORMAT}
+  echo -e "Visa Script Ran At: ${DATE_FORMAT} \nInconsistencies were found, the VisaInfo column should consist only of the following entries: 'Visa Required', 'Visa Not Reqired', 'eVisa' and 'Admission Refused'.\n\nBelow is a list of inconsistencies found on the latest Wikipedia scan.\n${INCONSISTENCIES}\n\nPlease add the exceptions above into the 'VISA TYPE FILTERING' section of the scan script." >> /tmp/visaScan-Inconsistencies-${DATE_FORMAT}
   echo -e "\nThere were inconsistencies! Please review the contents of /tmp/visaScan-Inconsistencies-${DATE_FORMAT}\n"
 
 fi
