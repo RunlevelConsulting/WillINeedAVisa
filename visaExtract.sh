@@ -246,7 +246,7 @@ do
         elif [[ ${VISATEXT} = "Entry Not Permitted"* ]]; then  VISATEXT="Admission Refused";
         elif [[ ${VISATEXT} = "Travel restricted"* ]]; then  VISATEXT="Admission Refused";
         elif [[ ${VISATEXT} = "Travel banned"* ]]; then  VISATEXT="Admission Refused"; fi
-        VISATEXT=$(echo ${VISATEXT} | sed -r 's/(Invalid passport|Not recognized)/Admission Refused/gi')
+        VISATEXT=$(echo ${VISATEXT} | sed -r 's/(Restricted Entry|Invalid passport|Not recognized)/Admission Refused/gi')
 
         # Random - This is where entries are just completely off and you have to add a manual exception
         if [[ ${VISATEXT} = "With "* ]]; then VISATEXT="Visa Required";       fi
