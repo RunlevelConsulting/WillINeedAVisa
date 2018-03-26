@@ -1,68 +1,54 @@
 <?php
-if ($_GET['ajax_request']){
-  include($_SERVER['DOCUMENT_ROOT'].'/inc/core.inc.php');
-}
+if ($_GET['ajax_request']){ include($_SERVER['DOCUMENT_ROOT'].'/inc/core.inc.php'); }
 
-
-if (is_numeric($_GET['fromId']) && is_numeric($_GET['toId'])){
-  $fromId=$_GET['fromId'];
-  $toId=$_GET['toId'];
+if ( is_numeric($_GET['fromId']) && is_numeric($_GET['toId']) ){
+  $fromId = $_GET['fromId'];
+  $toId = $_GET['toId'];
 
   if (dbCount("countryFromId=$fromId AND countryToId=$toId", "VisaInfo") == 1){
 
     $getVisaInfo = dbSelect("SELECT wvi.visaInfo, wvi.additionalInfo, wc.country FROM VisaInfo AS wvi, Countries AS wc WHERE wvi.countryToId = $toId AND wvi.countryFromId = $fromId AND wc.id = wvi.countryToId");
-    $visaInfo=$getVisaInfo[0]['visaInfo'];
-    $additionalInfo=$getVisaInfo[0]['additionalInfo'];
-    $countryName=$getVisaInfo[0]['country'];
+    $visaInfo = $getVisaInfo[0]['visaInfo'];
+    $additionalInfo = $getVisaInfo[0]['additionalInfo'];
+    $countryName = $getVisaInfo[0]['country'];
 
-    if (strtolower($visaInfo) == "visa not required"){
-       if ($additionalInfo != ""){
-        $smallMessage="Stay up to $additionalInfo";
-      } else {
-        $smallMessage="Have a great trip!";
-      }
-
-      $bigMessage="No Visa needed! Get Packing!";
-      $oneWord="NO";
-
+    if ( strtolower($visaInfo) == "visa not required" ){
+      $smallMessage = ( !empty($additionalInfo) ) ? "Stay up to $additionalInfo" : "Have a great trip!";
+      $bigMessage = "No Visa needed! Get Packing!";
+      $oneWord = "NO";
     }
 
-    elseif (strtolower($visaInfo) == "visa required"){
-      if ($additionalInfo != ""){ $addThis="- Valid for $additionalInfo"; }
-
-      $bigMessage="Yes, you need a visa!";
-      $smallMessage="<a target=\"_blank\" href=\"https://www.google.com/#q=Apply+For+$countryName+Visa\">Click here</a> to find out how to apply $addThis";
-      $oneWord="VISA";
-
+    elseif ( strtolower($visaInfo) == "visa required" ){
+      $addThis = ( !empty($additionalInfo) ) ? "- Valid for $additionalInfo" : null;
+      $smallMessage = "<a target=\"_blank\" href=\"https://www.google.com/#q=Apply+For+$countryName+Visa\">Click here</a> to find out how to apply $addThis";
+      $bigMessage = "Yes, you need a visa!";
+      $oneWord = "VISA";
     }
 
     elseif (strtolower($visaInfo) == "evisa"){
-      if ($additionalInfo != ""){ $addThis="- Valid for $additionalInfo"; }
-
-      $bigMessage="Yes, you need an E-Visa!";
-      $smallMessage="<a target=\"_blank\" href=\"https://www.google.com/#q=Apply+For+$countryName+eVisa\">Click Here to Apply Online</a> $addThis";
-      $oneWord="VISA";
-
+      $addThis = ( !empty($additionalInfo) ) ? "- Valid for $additionalInfo" : null;
+      $smallMessage = "<a target=\"_blank\" href=\"https://www.google.com/#q=Apply+For+$countryName+eVisa\">Click Here to Apply Online</a> $addThis";
+      $bigMessage = "Yes, you need an E-Visa!";
+      $oneWord = "VISA";
     }
 
     elseif (strtolower($visaInfo) == "admission refused"){
-      $bigMessage="Entry is not permitted";
-      $smallMessage="Citizens of this country will be refused entry. Sorry :(";
-      $oneWord=":(";
+      $smallMessage = "Citizens of this country will be refused entry. Sorry :(";
+      $bigMessage = "Entry is not permitted";
+      $oneWord = ":(";
     }
 
     else {
-      $bigMessage="Sorry";
-      $smallMessage="There's a problem with this entry, we'll fix it ASAP!";
-      $oneWord="???";
+      $smallMessage = "There's a problem with this entry, we'll fix it ASAP!";
+      $bigMessage = "Sorry";
+      $oneWord = "???";
     }
-
 ?>
 
     <div class="clearfix search-result">
       <div style="width:25%;" class="filler-text box-position">
         <div class="one-word-answer">
-          <?=$oneWord;?>
+          <?= $oneWord; ?>
         </div>
 
         <div class="clearfix">
@@ -89,19 +75,19 @@ if (is_numeric($_GET['fromId']) && is_numeric($_GET['toId'])){
                 </g>
               </svg>
             </div>
-            <div class="year"><?=date("Y");?></div>
+            <div class="year"><?= date("Y"); ?></div>
           </div>
 
           <div style="width:45%;" class="country box-position">
-            <?=substr($countryName, 0, 2);?>
+            <?= substr($countryName, 0, 2); ?>
           </div>
 
         </div>
       </div>
 
       <div style="width:75%;" class="result-explanation box-position">
-        <h2><?=$bigMessage;?></h2>
-        <h4><?=$smallMessage;?></h4>
+        <h2><?= $bigMessage; ?></h2>
+        <h4><?= $smallMessage; ?></h4>
       </div>
     </div>
 

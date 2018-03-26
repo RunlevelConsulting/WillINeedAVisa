@@ -1,24 +1,24 @@
 <?php
 include($_SERVER['DOCUMENT_ROOT'].'/inc/core.inc.php');
 
-if (is_numeric($_GET['fromId'])){
-  $fromId=$_GET['fromId'];
-  if (dbCount("id=$fromId", "Countries") == 1){
-    $workingFromId=1;
+if ( is_numeric($_GET['fromId']) ){
+  $fromId = $_GET['fromId'];
+  if ( dbCount("id=$fromId", "Countries") == 1 ){
+    $workingFromId = 1;
     $getFromCountryDB = dbSelect("SELECT country FROM Countries WHERE id = $fromId");
     foreach($getFromCountryDB as $data){
-      $countryFromName=$data['country'];
+      $countryFromName = $data['country'];
     }
   }
 }
 
-if (is_numeric($_GET['toId'])){
-  $toId=$_GET['toId'];
-  if (dbCount("id=$toId", "Countries") == 1){
-    $workingToId=1;
+if ( is_numeric($_GET['toId']) ){
+  $toId = $_GET['toId'];
+  if ( dbCount("id=$toId", "Countries") == 1 ){
+    $workingToId = 1;
     $getToCountryDB = dbSelect("SELECT country FROM Countries WHERE id = $toId");
     foreach($getToCountryDB as $data){
-      $countryToName=$data['country'];
+      $countryToName = $data['country'];
     }
   }
 }
@@ -60,8 +60,8 @@ if (is_numeric($_GET['toId'])){
               <option disabled selected>Select Country</option>
               <?php
               $dbCountries = dbSelect("SELECT * FROM Countries ORDER BY country ASC");
-                foreach($dbCountries as $data){?>
-                  <option value="<?=$data['id'];?>" <?php if ($fromId == $data['id']){echo " selected";}?>><?=$data['country'];?></option>
+                foreach($dbCountries as $data){ ?>
+                  <option value="<?= $data['id']; ?>" <?php if ($fromId == $data['id']){echo " selected";}?>><?= $data['country']; ?></option>
                 <?php } ?>
             </select>
 
@@ -123,8 +123,8 @@ if (is_numeric($_GET['toId'])){
               <option disabled selected>Select Country</option>
               <?php
               $dbCountries = dbSelect("SELECT * FROM Countries ORDER BY country ASC");
-                foreach($dbCountries as $data){?>
-                  <option value="<?=$data['id'];?>" <?php if ($toId == $data['id']){echo " selected";}?>><?=$data['country'];?></option>
+                foreach($dbCountries as $data){ ?>
+                  <option value="<?= $data['id']; ?>" <?php if ($toId == $data['id']){echo " selected";}?>><?= $data['country']; ?></option>
                 <?php } ?>
             </select>
 
