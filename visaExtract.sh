@@ -234,7 +234,7 @@ do
         if [[ ${VISATEXT} = *"reciprocity fee"* ]]; then      VISATEXT="Visa Not Required";
         elif [[ ${VISATEXT} = *"visa on arr"* ]]; then        VISATEXT="Visa Not Required";
         elif [[ ${VISATEXT} = "Visa not req"* ]]; then        VISATEXT="Visa Not Required";   fi
-        VISATEXT=$(echo ${VISATEXT} | sed -r 's/(Freedom of movement|Multiple-entry visa on arrival|Visa is granted on arrival|Visa arrival|Visa not$)/Visa Not Required/gi')
+        VISATEXT=$(echo ${VISATEXT} | sed -r 's/(Freedom of movement|Multiple-entry visa on arrival|Visa is granted on arrival|Visitor Permit on arrival|Visa arrival|Visa not$)/Visa Not Required/gi')
 
         # Visa Required
         if [[ ${VISATEXT} = "Visa req"* ]]; then      VISATEXT="Visa Required"; fi # People actually misspell the word "required"...
