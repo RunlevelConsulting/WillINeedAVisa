@@ -229,7 +229,7 @@ do
 
         # Visa Section
         # Lots of different phrases refer to the same thing. Change them all to 'Visa'
-        VISATEXT=$(echo ${VISATEXT} | sed -r 's/(Entry Permit|Entry Clearance|Visitor&#39;s Permit|^Permit|Tourist Card|Travel Certificate)/Visa/gi')
+        VISATEXT=$(echo ${VISATEXT} | sed -r 's/(Entry Permit|Entry Clearance|Visitor&#39;s Permit|^Permit|Tourist Card|Travel Certificate|Particular visit regime)/Visa/gi')
 
         # Visa Not Reqired
         if [[ ${VISATEXT} = *"reciprocity fee"* ]]; then      VISATEXT="Visa Not Required";
