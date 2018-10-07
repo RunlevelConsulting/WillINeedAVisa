@@ -229,7 +229,7 @@ do
 
         # Visa Section
         # Lots of different phrases refer to the same thing. Change them all to 'Visa'
-        VISATEXT=$(echo ${VISATEXT} | sed -r 's/(Entry Permit|Entry Clearance|Visitor&#39;s Permit|^Permit|Tourist Card|Travel Certificate|Particular visit regime)/Visa/gi')
+        VISATEXT=$(echo ${VISATEXT} | sed -r 's/(Entry Permit|Entry Clearance|Visitor&#39;s Permit|^Permit|Tourist Card|Travel Certificate)/Visa/gi')
 
         # Visa Not Reqired
         if [[ ${VISATEXT} = *"reciprocity fee"* ]]; then      VISATEXT="Visa Not Required";
@@ -239,7 +239,7 @@ do
 
         # Visa Required
         if [[ ${VISATEXT} = "Visa req"* ]]; then      VISATEXT="Visa Required"; fi # People actually misspell the word "required"...
-        VISATEXT=$(echo ${VISATEXT} | sed -r 's/(Visa or eTA required|Special provisions|Admission partially refused \/ partially allowed|Affidavit of Identity required|Visa is required|Visa on arrival but prior approval required|Visa de facto required|Special authorization required|Disputed)/Visa Required/gi')
+        VISATEXT=$(echo ${VISATEXT} | sed -r 's/(Visa or eTA required|Special provisions|Admission partially refused \/ partially allowed|Affidavit of Identity required|Visa is required|Visa on arrival but prior approval required|Visa de facto required|Special authorization required|Disputed|Particular visit regime)/Visa Required/gi')
 
         # Admission Refused
         if [[ ${VISATEXT} = "Admission Refused"* ]];     then  VISATEXT="Admission Refused";
