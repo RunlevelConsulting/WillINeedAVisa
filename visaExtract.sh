@@ -192,11 +192,11 @@ do
       # This section of the code is pretty horrible and the less said about it, the better.
       #
       VISATEXT=$(echo ${i} | jq -r '.children[1].text' | sed 's/&lt;$//gi') # Catches 99% of entries
-      if [[ "${VISATEXT}" == null || "${VISATEXT}" == '' ]];  then		VISATEXT=$(echo ${i} | jq -r '.children[1].children[0].text' | sed 's/&lt;$//gi');   		fi # Some outputs will have an '!', these are display:none elements, we don't want these
-      if [[ "${VISATEXT}" == *"!"* || "${VISATEXT}" == '' ]]; then		VISATEXT=$(echo ${i} | jq -r '.children[1].children[1].text' | sed 's/&lt;$//gi');   		fi # So change the extracted text
-      if [[ "${VISATEXT}" == null || "${VISATEXT}" == '' ]]; then               VISATEXT=$(echo ${i} | jq -r '.children[1].children[0].children[0].text' | sed 's/&lt;$//gi');  fi # Mainly added cos of the USA one
-      if [[ "${VISATEXT}" == null || "${VISATEXT}" == '' ]]; then		VISATEXT=$(echo ${i} | jq -r '.children[1].children[1].children[0].text' | sed 's/&lt;$//gi'); 	fi # Still doesn't get anything?
-      if [[ "${VISATEXT}" == '' ]]; then					VISATEXT=$(echo ${i} | jq -r '.children[1].children[1].text' | sed 's/&lt;$//gi');   		fi # Another attempt
+      if [[ "${VISATEXT}" == null || "${VISATEXT}" == '' ]];  then		VISATEXT=$(echo ${i} | jq -r '.children[1].children[0].text' | sed 's/&lt;$//gi');              fi # Some outputs will have an '!', these are display:none elements, we don't want these
+      if [[ "${VISATEXT}" == *"!"* || "${VISATEXT}" == '' ]]; then		VISATEXT=$(echo ${i} | jq -r '.children[1].children[1].text' | sed 's/&lt;$//gi');              fi # So change the extracted text
+      if [[ "${VISATEXT}" == null || "${VISATEXT}" == '' ]]; then		VISATEXT=$(echo ${i} | jq -r '.children[1].children[0].children[0].text' | sed 's/&lt;$//gi');  fi # Mainly added cos of the USA one
+      if [[ "${VISATEXT}" == null || "${VISATEXT}" == '' ]]; then		VISATEXT=$(echo ${i} | jq -r '.children[1].children[1].children[0].text' | sed 's/&lt;$//gi');  fi # Still doesn't get anything?
+      if [[ "${VISATEXT}" == '' ]]; then					VISATEXT=$(echo ${i} | jq -r '.children[1].children[1].text' | sed 's/&lt;$//gi');              fi # Another attempt
 
       # I found that modifying the visa text can make the script a little slow.
       # So if an entry already has one of the four valid "VisaText" values, then the next section can be skipped altogether
