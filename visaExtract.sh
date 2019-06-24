@@ -225,7 +225,7 @@ do
         elif [[ ${VISATEXT} = "Electronic"* ]]; then  VISATEXT="eVisa";
         elif [[ ${VISATEXT} = "E-"* ]]; then  VISATEXT="eVisa";
         elif [[ ${VISATEXT} = *"e600"* ]]; then  VISATEXT="eVisa";       fi
-        VISATEXT=$(echo ${VISATEXT} | sed -r 's/(Visa Waiver Program|eVisa\/eNTRI|ASAN Electronic Visa|On-line registration or eVisa|eVisa required|eVisitor|^eTA$|Online registration or eVisa|Visa On Arrival in advance|Visa on arrival or E-Visa|Reciprocity fee in advance|eVisa &amp; Visa on Arrival)/eVisa/gi')
+        VISATEXT=$(echo ${VISATEXT} | sed -r 's/(Online Visa|Visa Waiver Program|eVisa\/eNTRI|ASAN Electronic Visa|On-line registration or eVisa|eVisa required|eVisitor|^eTA$|Online registration or eVisa|Visa On Arrival in advance|Visa on arrival or E-Visa|Reciprocity fee in advance|eVisa &amp; Visa on Arrival)/eVisa/gi')
 
         # Visa Section
         # Lots of different phrases refer to the same thing. Change them all to 'Visa'
